@@ -1,0 +1,1 @@
+export { ResidentHomeScreen } from './ResidentHomeScreen';

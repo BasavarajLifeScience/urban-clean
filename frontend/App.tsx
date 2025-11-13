@@ -2,19 +2,37 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { lightTheme } from './src/theme';
 import { RootStackParamList } from './src/navigation/types';
 
-// Navigation placeholder screens (to be implemented)
+// Auth Screens
+import {
+  WelcomeScreen,
+  LoginScreen,
+  RegisterScreen,
+  OTPVerificationScreen,
+  ForgotPasswordScreen,
+} from './src/screens/auth';
+
+// Resident Screens
+import { ResidentHomeScreen } from './src/screens/resident';
+
+// Sevak Screens
+import { SevakDashboardScreen } from './src/screens/sevak';
+
+// Placeholder for other screens
 import { Text, View, ActivityIndicator } from 'react-native';
 
 const Stack = createStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator();
 
 // Placeholder components
 const PlaceholderScreen = ({ title }: { title: string }) => (
@@ -32,19 +50,65 @@ const AuthNavigator = () => {
 
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-      <AuthStack.Screen name="Welcome">
-        {() => <PlaceholderScreen title="Welcome Screen" />}
-      </AuthStack.Screen>
-      <AuthStack.Screen name="Login">
-        {() => <PlaceholderScreen title="Login Screen" />}
-      </AuthStack.Screen>
-      <AuthStack.Screen name="Register">
-        {() => <PlaceholderScreen title="Register Screen" />}
-      </AuthStack.Screen>
-      <AuthStack.Screen name="OTPVerification">
-        {() => <PlaceholderScreen title="OTP Verification Screen" />}
-      </AuthStack.Screen>
+      <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
+      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="Register" component={RegisterScreen} />
+      <AuthStack.Screen name="OTPVerification" component={OTPVerificationScreen} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </AuthStack.Navigator>
+  );
+};
+
+// Resident Tab Navigator
+const ResidentTabs = () => {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: '#2196F3',
+        tabBarInactiveTintColor: '#757575',
+        headerShown: true,
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={ResidentHomeScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="home" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Services"
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="room-service" size={size} color={color} />
+          ),
+        }}
+      >
+        {() => <PlaceholderScreen title="Services - Coming Soon" />}
+      </Tab.Screen>
+      <Tab.Screen
+        name="Bookings"
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="calendar-check" size={size} color={color} />
+          ),
+        }}
+      >
+        {() => <PlaceholderScreen title="Bookings - Coming Soon" />}
+      </Tab.Screen>
+      <Tab.Screen
+        name="Profile"
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account" size={size} color={color} />
+          ),
+        }}
+      >
+        {() => <PlaceholderScreen title="Profile - Coming Soon" />}
+      </Tab.Screen>
+    </Tab.Navigator>
   );
 };
 
@@ -54,10 +118,61 @@ const ResidentNavigator = () => {
 
   return (
     <ResidentStack.Navigator screenOptions={{ headerShown: false }}>
-      <ResidentStack.Screen name="ResidentTabs">
-        {() => <PlaceholderScreen title="Resident App - Home, Services, Bookings" />}
-      </ResidentStack.Screen>
+      <ResidentStack.Screen name="ResidentTabs" component={ResidentTabs} />
     </ResidentStack.Navigator>
+  );
+};
+
+// Sevak Tab Navigator
+const SevakTabs = () => {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: '#2196F3',
+        tabBarInactiveTintColor: '#757575',
+        headerShown: true,
+      }}
+    >
+      <Tab.Screen
+        name="Dashboard"
+        component={SevakDashboardScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="view-dashboard" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Jobs"
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="briefcase" size={size} color={color} />
+          ),
+        }}
+      >
+        {() => <PlaceholderScreen title="Jobs - Coming Soon" />}
+      </Tab.Screen>
+      <Tab.Screen
+        name="Earnings"
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="currency-inr" size={size} color={color} />
+          ),
+        }}
+      >
+        {() => <PlaceholderScreen title="Earnings - Coming Soon" />}
+      </Tab.Screen>
+      <Tab.Screen
+        name="Profile"
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account" size={size} color={color} />
+          ),
+        }}
+      >
+        {() => <PlaceholderScreen title="Profile - Coming Soon" />}
+      </Tab.Screen>
+    </Tab.Navigator>
   );
 };
 
@@ -67,9 +182,8 @@ const SevakNavigator = () => {
 
   return (
     <SevakStack.Navigator screenOptions={{ headerShown: false }}>
-      <SevakStack.Screen name="SevakTabs">
-        {() => <PlaceholderScreen title="Sevak App - Jobs, Dashboard, Earnings" />}
-      </SevakStack.Navigator>
+      <SevakStack.Screen name="SevakTabs" component={SevakTabs} />
+    </SevakStack.Navigator>
   );
 };
 

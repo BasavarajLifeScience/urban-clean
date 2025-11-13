@@ -4,8 +4,8 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 export type AuthStackParamList = {
   Welcome: undefined;
   Login: undefined;
-  Register: undefined;
-  OTPVerification: { userId: string; otp?: string };
+  Register: { role?: 'resident' | 'sevak' | 'vendor' } | undefined;
+  OTPVerification: { phoneNumber?: string; email?: string };
   ForgotPassword: undefined;
   ResetPassword: { userId: string; otp?: string };
 };

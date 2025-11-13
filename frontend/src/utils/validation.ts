@@ -10,7 +10,10 @@ export const registerSchema = z.object({
   phoneNumber: z.string().regex(/^[+]?[\d\s()-]{10,}$/, 'Invalid phone number'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  role: z.enum(['resident', 'sevak', 'vendor']),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
 });
 
 export const otpSchema = z.object({
