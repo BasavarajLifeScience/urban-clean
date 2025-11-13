@@ -99,7 +99,7 @@ const getBookingById = async (req, res, next) => {
     }
 
     // Check if user has permission to view this booking
-    if (booking.residentId._id.toString() !== userId && booking.sevakId?._id.toString() !== userId) {
+    if (booking.residentId._id.toString() !== userId.toString() && booking.sevakId?._id.toString() !== userId.toString()) {
       throw new ForbiddenError('You do not have permission to view this booking');
     }
 

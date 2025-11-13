@@ -179,7 +179,7 @@ if [ -n "$RESIDENT_TOKEN" ] && [ -n "$SERVICE_ID" ]; then
     }" "$RESIDENT_TOKEN" > /dev/null
 
     # Get Favorites
-    call_api "Get Favorites" "GET" "/services/favorites" "" "$RESIDENT_TOKEN" > /dev/null
+    call_api "Get Favorites" "GET" "/services/user/favorites" "" "$RESIDENT_TOKEN" > /dev/null
 fi
 
 # Booking endpoints
