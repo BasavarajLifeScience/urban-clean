@@ -30,7 +30,7 @@ services:
     container_name: society-booking-backend
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
       NODE_ENV: development
       PORT: 5000
