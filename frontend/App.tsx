@@ -23,7 +23,14 @@ import {
 } from './src/screens/auth';
 
 // Resident Screens
-import { ResidentHomeScreen } from './src/screens/resident';
+import {
+  ResidentHomeScreen,
+  ServicesListScreen,
+  ServiceDetailScreen,
+  CreateBookingScreen,
+  MyBookingsScreen,
+  BookingDetailScreen,
+} from './src/screens/resident';
 
 // Sevak Screens
 import { SevakDashboardScreen } from './src/screens/sevak';
@@ -80,24 +87,22 @@ const ResidentTabs = () => {
       />
       <Tab.Screen
         name="Services"
+        component={ServicesListScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="room-service" size={size} color={color} />
           ),
         }}
-      >
-        {() => <PlaceholderScreen title="Services - Coming Soon" />}
-      </Tab.Screen>
+      />
       <Tab.Screen
         name="Bookings"
+        component={MyBookingsScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="calendar-check" size={size} color={color} />
           ),
         }}
-      >
-        {() => <PlaceholderScreen title="Bookings - Coming Soon" />}
-      </Tab.Screen>
+      />
       <Tab.Screen
         name="Profile"
         options={{
@@ -117,8 +122,33 @@ const ResidentNavigator = () => {
   const ResidentStack = createStackNavigator();
 
   return (
-    <ResidentStack.Navigator screenOptions={{ headerShown: false }}>
-      <ResidentStack.Screen name="ResidentTabs" component={ResidentTabs} />
+    <ResidentStack.Navigator>
+      <ResidentStack.Screen
+        name="ResidentTabs"
+        component={ResidentTabs}
+        options={{ headerShown: false }}
+      />
+      <ResidentStack.Screen
+        name="ServiceDetail"
+        component={ServiceDetailScreen}
+        options={{ title: 'Service Details' }}
+      />
+      <ResidentStack.Screen
+        name="CreateBooking"
+        component={CreateBookingScreen}
+        options={{ title: 'Book Service' }}
+      />
+      <ResidentStack.Screen
+        name="BookingDetail"
+        component={BookingDetailScreen}
+        options={{ title: 'Booking Details' }}
+      />
+      <ResidentStack.Screen
+        name="Payment"
+        options={{ title: 'Payment' }}
+      >
+        {() => <PlaceholderScreen title="Payment - Coming Soon" />}
+      </ResidentStack.Screen>
     </ResidentStack.Navigator>
   );
 };
