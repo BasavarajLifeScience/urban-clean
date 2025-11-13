@@ -10,7 +10,7 @@ import { StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
-import { lightTheme } from './src/theme';
+import { lightTheme, theme } from './src/theme';
 import { RootStackParamList } from './src/navigation/types';
 
 // Auth Screens
@@ -81,8 +81,16 @@ const ResidentTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#2196F3',
-        tabBarInactiveTintColor: '#757575',
+        tabBarActiveTintColor: theme.colors.roles.resident.main,
+        tabBarInactiveTintColor: theme.colors.neutral[400],
+        tabBarStyle: {
+          backgroundColor: theme.colors.background.primary,
+          borderTopColor: theme.colors.border.light,
+        },
+        headerStyle: {
+          backgroundColor: theme.colors.background.primary,
+        },
+        headerTintColor: theme.colors.text.primary,
         headerShown: true,
       }}
     >
@@ -171,8 +179,16 @@ const SevakTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#2196F3',
-        tabBarInactiveTintColor: '#757575',
+        tabBarActiveTintColor: theme.colors.roles.sevak.main,
+        tabBarInactiveTintColor: theme.colors.neutral[400],
+        tabBarStyle: {
+          backgroundColor: theme.colors.background.primary,
+          borderTopColor: theme.colors.border.light,
+        },
+        headerStyle: {
+          backgroundColor: theme.colors.background.primary,
+        },
+        headerTintColor: theme.colors.text.primary,
         headerShown: true,
       }}
     >
@@ -255,7 +271,7 @@ const RootNavigator = () => {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2196F3" />
+        <ActivityIndicator size="large" color={theme.colors.primary[600]} />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
@@ -299,30 +315,30 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.background.primary,
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666666',
+    marginTop: theme.spacing[4],
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.secondary,
   },
   placeholder: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    padding: 32,
+    backgroundColor: theme.colors.background.secondary,
+    padding: theme.spacing[8],
   },
   placeholderText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2196F3',
-    marginBottom: 16,
+    fontSize: theme.typography.fontSize['3xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.primary[600],
+    marginBottom: theme.spacing[4],
     textAlign: 'center',
   },
   placeholderSubtext: {
-    fontSize: 16,
-    color: '#666666',
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.secondary,
     textAlign: 'center',
   },
 });

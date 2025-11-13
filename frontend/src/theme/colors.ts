@@ -1,54 +1,54 @@
 /**
  * Premium Color System for Urban Clean
  *
- * A sophisticated color palette designed for a premium service booking experience.
- * All colors are centralized here for easy theme customization.
+ * Inspired by premium service platforms with sophisticated color palette.
+ * Deep purples, elegant teals, and warm accents for a luxurious feel.
  */
 
 export const colors = {
-  // Primary Brand Colors - Deep Emerald Green (Trust, Growth, Sustainability)
+  // Primary Brand Colors - Deep Purple (Premium, Trust, Sophistication)
   primary: {
-    50: '#E8F5E9',
-    100: '#C8E6C9',
-    200: '#A5D6A7',
-    300: '#81C784',
-    400: '#66BB6A',
-    500: '#10B981',  // Main primary color
+    50: '#F5F3FF',
+    100: '#EDE9FE',
+    200: '#DDD6FE',
+    300: '#C4B5FD',
+    400: '#A78BFA',
+    500: '#8B5CF6',  // Main primary color
+    600: '#7C3AED',
+    700: '#6D28D9',
+    800: '#5B21B6',
+    900: '#4C1D95',
+  },
+
+  // Secondary Colors - Elegant Teal (Calm, Professional, Fresh)
+  secondary: {
+    50: '#F0FDFA',
+    100: '#CCFBF1',
+    200: '#99F6E4',
+    300: '#5EEAD4',
+    400: '#2DD4BF',
+    500: '#14B8A6',
     600: '#0D9488',
     700: '#0F766E',
     800: '#115E59',
     900: '#134E4A',
   },
 
-  // Secondary Colors - Sophisticated Navy Blue (Professionalism, Security)
-  secondary: {
-    50: '#EFF6FF',
-    100: '#DBEAFE',
-    200: '#BFDBFE',
-    300: '#93C5FD',
-    400: '#60A5FA',
-    500: '#3B82F6',
-    600: '#2563EB',
-    700: '#1E40AF',
-    800: '#1E3A8A',
-    900: '#1E293B',
-  },
-
-  // Accent Colors - Warm Amber (Energy, Action)
+  // Accent Colors - Sunset Orange (Warmth, Energy, Action)
   accent: {
     50: '#FFF7ED',
     100: '#FFEDD5',
     200: '#FED7AA',
     300: '#FDBA74',
     400: '#FB923C',
-    500: '#F59E0B',
-    600: '#D97706',
-    700: '#B45309',
-    800: '#92400E',
-    900: '#78350F',
+    500: '#F97316',
+    600: '#EA580C',
+    700: '#C2410C',
+    800: '#9A3412',
+    900: '#7C2D12',
   },
 
-  // Neutral Grays - Premium Slate Tones
+  // Neutral Grays - Sophisticated Slate with Blue undertones
   neutral: {
     0: '#FFFFFF',
     50: '#F8FAFC',
@@ -87,10 +87,10 @@ export const colors = {
   },
 
   info: {
-    light: '#DBEAFE',
-    main: '#3B82F6',
-    dark: '#2563EB',
-    darker: '#1D4ED8',
+    light: '#E0F2FE',
+    main: '#0EA5E9',
+    dark: '#0284C7',
+    darker: '#0369A1',
   },
 
   // Status Colors for Bookings
@@ -109,7 +109,12 @@ export const colors = {
     secondary: '#F8FAFC',
     tertiary: '#F1F5F9',
     dark: '#0F172A',
-    overlay: 'rgba(0, 0, 0, 0.5)',
+    overlay: 'rgba(15, 23, 42, 0.6)',
+    gradient: {
+      start: '#8B5CF6',
+      middle: '#7C3AED',
+      end: '#6D28D9',
+    },
   },
 
   // Text Colors
@@ -119,7 +124,7 @@ export const colors = {
     tertiary: '#94A3B8',
     disabled: '#CBD5E1',
     inverse: '#FFFFFF',
-    link: '#2563EB',
+    link: '#7C3AED',
     success: '#059669',
     warning: '#D97706',
     error: '#DC2626',
@@ -130,42 +135,46 @@ export const colors = {
     light: '#E2E8F0',
     main: '#CBD5E1',
     dark: '#94A3B8',
-    focus: '#10B981',
+    focus: '#8B5CF6',
   },
 
   // Shadow Colors
   shadow: {
-    sm: 'rgba(0, 0, 0, 0.05)',
-    md: 'rgba(0, 0, 0, 0.1)',
-    lg: 'rgba(0, 0, 0, 0.15)',
-    xl: 'rgba(0, 0, 0, 0.2)',
+    sm: 'rgba(139, 92, 246, 0.1)',
+    md: 'rgba(139, 92, 246, 0.15)',
+    lg: 'rgba(139, 92, 246, 0.2)',
+    xl: 'rgba(139, 92, 246, 0.25)',
   },
 
   // Gradient Colors
   gradients: {
-    primary: ['#10B981', '#0D9488'],
-    secondary: ['#3B82F6', '#2563EB'],
-    sunset: ['#F59E0B', '#EF4444'],
-    ocean: ['#06B6D4', '#3B82F6'],
-    forest: ['#10B981', '#059669'],
+    primary: ['#8B5CF6', '#7C3AED', '#6D28D9'],
+    secondary: ['#14B8A6', '#0D9488', '#0F766E'],
+    sunset: ['#F97316', '#EA580C', '#C2410C'],
+    ocean: ['#0EA5E9', '#0284C7', '#0369A1'],
+    royal: ['#7C3AED', '#8B5CF6', '#A78BFA'],
+    premium: ['#6D28D9', '#8B5CF6', '#14B8A6'],
   },
 
-  // Role-specific Colors
+  // Role-specific Colors - Premium variations
   roles: {
     resident: {
-      main: '#3B82F6',
-      light: '#DBEAFE',
-      dark: '#1E40AF',
+      main: '#8B5CF6',       // Purple - Premium, sophisticated
+      light: '#EDE9FE',
+      dark: '#6D28D9',
+      gradient: ['#8B5CF6', '#7C3AED'],
     },
     sevak: {
-      main: '#10B981',
-      light: '#D1FAE5',
-      dark: '#059669',
+      main: '#14B8A6',       // Teal - Professional, trustworthy
+      light: '#CCFBF1',
+      dark: '#0F766E',
+      gradient: ['#14B8A6', '#0D9488'],
     },
     vendor: {
-      main: '#F59E0B',
-      light: '#FEF3C7',
-      dark: '#D97706',
+      main: '#F97316',       // Orange - Energetic, business-focused
+      light: '#FFEDD5',
+      dark: '#C2410C',
+      gradient: ['#F97316', '#EA580C'],
     },
   },
 
@@ -177,6 +186,14 @@ export const colors = {
     good: '#3B82F6',       // 3.5-4.4
     average: '#F59E0B',    // 2.5-3.4
     poor: '#EF4444',       // < 2.5
+  },
+
+  // Premium UI Elements
+  premium: {
+    gold: '#EAB308',
+    silver: '#94A3B8',
+    bronze: '#D97706',
+    platinum: '#E5E7EB',
   },
 } as const;
 
