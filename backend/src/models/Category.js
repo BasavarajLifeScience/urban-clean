@@ -32,7 +32,7 @@ const categorySchema = new mongoose.Schema({
 });
 
 // Indexes
-categorySchema.index({ name: 1 });
+// Note: name already has a unique index from schema definition
 categorySchema.index({ isActive: 1, displayOrder: 1 });
 
 const Category = mongoose.model('Category', categorySchema);

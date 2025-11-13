@@ -1,233 +1,328 @@
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from './src/theme';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StyleSheet } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { lightTheme } from './src/theme';
+import { RootStackParamList } from './src/navigation/types';
+
+// Auth Screens
+import {
+  WelcomeScreen,
+  LoginScreen,
+  RegisterScreen,
+  OTPVerificationScreen,
+  ForgotPasswordScreen,
+} from './src/screens/auth';
+
+// Resident Screens
+import {
+  ResidentHomeScreen,
+  ServicesListScreen,
+  ServiceDetailScreen,
+  CreateBookingScreen,
+  MyBookingsScreen,
+  BookingDetailScreen,
+  PaymentScreen,
+  RatingScreen,
+} from './src/screens/resident';
+
+// Sevak Screens
+import {
+  SevakDashboardScreen,
+  SevakJobsListScreen,
+  SevakJobDetailScreen,
+  SevakEarningsScreen,
+} from './src/screens/sevak';
+
+// Profile Screen
+import { ProfileScreen } from './src/screens/profile';
+
+// Placeholder for other screens
+import { Text, View, ActivityIndicator } from 'react-native';
+
+const Stack = createStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator();
+
+// Placeholder components
+const PlaceholderScreen = ({ title }: { title: string }) => (
+  <View style={styles.placeholder}>
+    <Text style={styles.placeholderText}>{title}</Text>
+    <Text style={styles.placeholderSubtext}>
+      This screen will be implemented with full functionality
+    </Text>
+  </View>
+);
+
+// Auth Navigator
+const AuthNavigator = () => {
+  const AuthStack = createStackNavigator();
+
+  return (
+    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+      <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
+      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="Register" component={RegisterScreen} />
+      <AuthStack.Screen name="OTPVerification" component={OTPVerificationScreen} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+    </AuthStack.Navigator>
+  );
+};
+
+// Resident Tab Navigator
+const ResidentTabs = () => {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: '#2196F3',
+        tabBarInactiveTintColor: '#757575',
+        headerShown: true,
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={ResidentHomeScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="home" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Services"
+        component={ServicesListScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="room-service" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Bookings"
+        component={MyBookingsScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="calendar-check" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account" size={size} color={color} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+};
+
+// Resident Navigator
+const ResidentNavigator = () => {
+  const ResidentStack = createStackNavigator();
+
+  return (
+    <ResidentStack.Navigator>
+      <ResidentStack.Screen
+        name="ResidentTabs"
+        component={ResidentTabs}
+        options={{ headerShown: false }}
+      />
+      <ResidentStack.Screen
+        name="ServiceDetail"
+        component={ServiceDetailScreen}
+        options={{ title: 'Service Details' }}
+      />
+      <ResidentStack.Screen
+        name="CreateBooking"
+        component={CreateBookingScreen}
+        options={{ title: 'Book Service' }}
+      />
+      <ResidentStack.Screen
+        name="BookingDetail"
+        component={BookingDetailScreen}
+        options={{ title: 'Booking Details' }}
+      />
+      <ResidentStack.Screen
+        name="Payment"
+        component={PaymentScreen}
+        options={{ title: 'Payment' }}
+      />
+      <ResidentStack.Screen
+        name="Rating"
+        component={RatingScreen}
+        options={{ title: 'Rate Service' }}
+      />
+    </ResidentStack.Navigator>
+  );
+};
+
+// Sevak Tab Navigator
+const SevakTabs = () => {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: '#2196F3',
+        tabBarInactiveTintColor: '#757575',
+        headerShown: true,
+      }}
+    >
+      <Tab.Screen
+        name="Dashboard"
+        component={SevakDashboardScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="view-dashboard" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Jobs"
+        component={SevakJobsListScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="briefcase" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Earnings"
+        component={SevakEarningsScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="currency-inr" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account" size={size} color={color} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+};
+
+// Sevak Navigator
+const SevakNavigator = () => {
+  const SevakStack = createStackNavigator();
+
+  return (
+    <SevakStack.Navigator>
+      <SevakStack.Screen
+        name="SevakTabs"
+        component={SevakTabs}
+        options={{ headerShown: false }}
+      />
+      <SevakStack.Screen
+        name="JobDetail"
+        component={SevakJobDetailScreen}
+        options={{ title: 'Job Details' }}
+      />
+      <SevakStack.Screen
+        name="CheckIn"
+        options={{ title: 'Check In' }}
+      >
+        {() => <PlaceholderScreen title="Check In - Coming Soon" />}
+      </SevakStack.Screen>
+      <SevakStack.Screen
+        name="CompleteJob"
+        options={{ title: 'Complete Job' }}
+      >
+        {() => <PlaceholderScreen title="Complete Job - Coming Soon" />}
+      </SevakStack.Screen>
+    </SevakStack.Navigator>
+  );
+};
+
+// Root Navigator
+const RootNavigator = () => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#2196F3" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!isAuthenticated ? (
+        <Stack.Screen name="Auth" component={AuthNavigator} />
+      ) : user?.role === 'resident' ? (
+        <Stack.Screen name="Resident" component={ResidentNavigator} />
+      ) : user?.role === 'sevak' ? (
+        <Stack.Screen name="Sevak" component={SevakNavigator} />
+      ) : (
+        <Stack.Screen name="Auth" component={AuthNavigator} />
+      )}
+    </Stack.Navigator>
+  );
+};
+
+// Main App Component
 export default function App() {
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
-
-      {/* Premium Gradient Header */}
-      <LinearGradient
-        colors={[theme.colors.primary[600], theme.colors.primary[500]]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Urban Clean</Text>
-          <Text style={styles.headerSubtitle}>Premium Service Booking</Text>
-        </View>
-      </LinearGradient>
-
-      {/* Main Content */}
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
-      >
-        {/* Welcome Section */}
-        <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeTitle}>Welcome to Urban Clean</Text>
-          <Text style={styles.welcomeText}>
-            Your trusted platform for professional cleaning and maintenance services
-          </Text>
-        </View>
-
-        {/* Feature Cards */}
-        <View style={styles.featuresGrid}>
-          {/* Resident Card */}
-          <View style={[styles.featureCard, { borderLeftColor: theme.colors.roles.resident.main }]}>
-            <View style={[styles.iconBadge, { backgroundColor: theme.colors.roles.resident.light }]}>
-              <Text style={[styles.iconText, { color: theme.colors.roles.resident.main }]}>🏠</Text>
-            </View>
-            <Text style={styles.featureTitle}>For Residents</Text>
-            <Text style={styles.featureDescription}>
-              Browse, book, and manage services with ease
-            </Text>
-          </View>
-
-          {/* Sevak Card */}
-          <View style={[styles.featureCard, { borderLeftColor: theme.colors.roles.sevak.main }]}>
-            <View style={[styles.iconBadge, { backgroundColor: theme.colors.roles.sevak.light }]}>
-              <Text style={[styles.iconText, { color: theme.colors.roles.sevak.main }]}>👨‍🔧</Text>
-            </View>
-            <Text style={styles.featureTitle}>For Sevaks</Text>
-            <Text style={styles.featureDescription}>
-              Manage jobs, track earnings, and grow your career
-            </Text>
-          </View>
-
-          {/* Vendor Card */}
-          <View style={[styles.featureCard, { borderLeftColor: theme.colors.roles.vendor.main }]}>
-            <View style={[styles.iconBadge, { backgroundColor: theme.colors.roles.vendor.light }]}>
-              <Text style={[styles.iconText, { color: theme.colors.roles.vendor.main }]}>🏢</Text>
-            </View>
-            <Text style={styles.featureTitle}>For Vendors</Text>
-            <Text style={styles.featureDescription}>
-              Expand your business and reach more customers
-            </Text>
-          </View>
-        </View>
-
-        {/* Stats Section */}
-        <View style={styles.statsSection}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>1000+</Text>
-            <Text style={styles.statLabel}>Happy Customers</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>500+</Text>
-            <Text style={styles.statLabel}>Skilled Sevaks</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>4.8★</Text>
-            <Text style={styles.statLabel}>Average Rating</Text>
-          </View>
-        </View>
-
-        {/* CTA Section */}
-        <View style={styles.ctaSection}>
-          <Text style={styles.ctaText}>Ready to get started?</Text>
-          <View style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>Launch Mobile App</Text>
-          </View>
-        </View>
-      </ScrollView>
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <PaperProvider theme={lightTheme}>
+          <AuthProvider>
+            <NavigationContainer>
+              <RootNavigator />
+            </NavigationContainer>
+            <StatusBar style="auto" />
+          </AuthProvider>
+        </PaperProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  centered: {
     flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 40,
-    paddingHorizontal: theme.spacing[6],
-    ...theme.shadows.lg,
-  },
-  headerContent: {
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: theme.typography.fontSize['4xl'],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.inverse,
-    marginBottom: theme.spacing[2],
-  },
-  headerSubtitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.primary[50],
-    letterSpacing: theme.typography.letterSpacing.wide,
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: theme.spacing[6],
-  },
-  welcomeSection: {
-    marginBottom: theme.spacing[8],
-    alignItems: 'center',
-  },
-  welcomeTitle: {
-    fontSize: theme.typography.fontSize['2xl'],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing[3],
-    textAlign: 'center',
-  },
-  welcomeText: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text.secondary,
-    textAlign: 'center',
-    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
-    paddingHorizontal: theme.spacing[4],
-  },
-  featuresGrid: {
-    gap: theme.spacing[4],
-    marginBottom: theme.spacing[8],
-  },
-  featureCard: {
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing[5],
-    borderLeftWidth: 4,
-    ...theme.shadows.md,
-  },
-  iconBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: theme.borderRadius.xl,
-    alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: theme.spacing[4],
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
-  iconText: {
-    fontSize: 28,
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666666',
   },
-  featureTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.semiBold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing[2],
-  },
-  featureDescription: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.sm,
-  },
-  statsSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing[8],
-    gap: theme.spacing[3],
-  },
-  statCard: {
+  placeholder: {
     flex: 1,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing[4],
+    justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.sm,
+    backgroundColor: '#F5F5F5',
+    padding: 32,
   },
-  statValue: {
-    fontSize: theme.typography.fontSize['2xl'],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
-    marginBottom: theme.spacing[1],
-  },
-  statLabel: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
+  placeholderText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2196F3',
+    marginBottom: 16,
     textAlign: 'center',
-    fontWeight: theme.typography.fontWeight.medium,
   },
-  ctaSection: {
-    alignItems: 'center',
-    marginTop: theme.spacing[4],
-  },
-  ctaText: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semiBold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing[5],
-  },
-  ctaButton: {
-    backgroundColor: theme.colors.primary[600],
-    paddingHorizontal: theme.spacing[8],
-    paddingVertical: theme.spacing[4],
-    borderRadius: theme.borderRadius.xl,
-    ...theme.shadows.lg,
-  },
-  ctaButtonText: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semiBold,
-    color: theme.colors.text.inverse,
-    letterSpacing: theme.typography.letterSpacing.wide,
+  placeholderSubtext: {
+    fontSize: 16,
+    color: '#666666',
+    textAlign: 'center',
   },
 });
