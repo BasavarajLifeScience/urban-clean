@@ -33,7 +33,12 @@ import {
 } from './src/screens/resident';
 
 // Sevak Screens
-import { SevakDashboardScreen } from './src/screens/sevak';
+import {
+  SevakDashboardScreen,
+  SevakJobsListScreen,
+  SevakJobDetailScreen,
+  SevakEarningsScreen,
+} from './src/screens/sevak';
 
 // Placeholder for other screens
 import { Text, View, ActivityIndicator } from 'react-native';
@@ -174,24 +179,22 @@ const SevakTabs = () => {
       />
       <Tab.Screen
         name="Jobs"
+        component={SevakJobsListScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="briefcase" size={size} color={color} />
           ),
         }}
-      >
-        {() => <PlaceholderScreen title="Jobs - Coming Soon" />}
-      </Tab.Screen>
+      />
       <Tab.Screen
         name="Earnings"
+        component={SevakEarningsScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="currency-inr" size={size} color={color} />
           ),
         }}
-      >
-        {() => <PlaceholderScreen title="Earnings - Coming Soon" />}
-      </Tab.Screen>
+      />
       <Tab.Screen
         name="Profile"
         options={{
@@ -211,8 +214,29 @@ const SevakNavigator = () => {
   const SevakStack = createStackNavigator();
 
   return (
-    <SevakStack.Navigator screenOptions={{ headerShown: false }}>
-      <SevakStack.Screen name="SevakTabs" component={SevakTabs} />
+    <SevakStack.Navigator>
+      <SevakStack.Screen
+        name="SevakTabs"
+        component={SevakTabs}
+        options={{ headerShown: false }}
+      />
+      <SevakStack.Screen
+        name="JobDetail"
+        component={SevakJobDetailScreen}
+        options={{ title: 'Job Details' }}
+      />
+      <SevakStack.Screen
+        name="CheckIn"
+        options={{ title: 'Check In' }}
+      >
+        {() => <PlaceholderScreen title="Check In - Coming Soon" />}
+      </SevakStack.Screen>
+      <SevakStack.Screen
+        name="CompleteJob"
+        options={{ title: 'Complete Job' }}
+      >
+        {() => <PlaceholderScreen title="Complete Job - Coming Soon" />}
+      </SevakStack.Screen>
     </SevakStack.Navigator>
   );
 };
