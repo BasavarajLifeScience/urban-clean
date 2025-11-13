@@ -216,7 +216,40 @@ fi
 
 # Notifications
 if [ -n "$RESIDENT_TOKEN" ]; then
-    call_api "Get Notifications" "GET" "/notifications" "" "$RESIDENT_TOKEN" > /dev/null
+    NOTIFICATIONS_RESPONSE=$(call_api "Get Notifications" "GET" "/notifications" "" "$RESIDENT_TOKEN")
+    NOTIFICATION_ID=$(echo "$NOTIFICATIONS_RESPONSE" | jq -r '.data[0]._id // .notifications[0]._id // empty' 2>/dev/null)
+
+    if [ -n "$NOTIFICATION_ID" ]; then
+        echo -e "${GREEN}→ Notification ID: $NOTIFICATION_ID${NC}"
+        call_api "Mark Notification as Read" "PATCH" "/notifications/$NOTIFICATION_ID/read" "" "$RESIDENT_TOKEN" > /dev/null
+    fi
+
+    call_api "Mark All Notifications as Read" "PATCH" "/notifications/read-all" "" "$RESIDENT_TOKEN" > /dev/null
+    call_api "Get Notification Settings" "GET" "/notifications/settings" "" "$RESIDENT_TOKEN" > /dev/null
+    call_api "Update Notification Settings" "PUT" "/notifications/settings" "{
+      \"email\": true,
+      \"sms\": false,
+      \"push\": true
+    }" "$RESIDENT_TOKEN" > /dev/null
+fi
+
+# Booking Management
+if [ -n "$RESIDENT_TOKEN" ] && [ -n "$BOOKING_ID" ]; then
+    # Test reschedule
+    call_api "Reschedule Booking" "PATCH" "/bookings/$BOOKING_ID/reschedule" "{
+      \"newDate\": \"2025-11-26\",
+      \"newTime\": \"11:00 AM\"
+    }" "$RESIDENT_TOKEN" > /dev/null
+
+    # Test cancel (do this last since it ends the booking lifecycle)
+    call_api "Cancel Booking" "PATCH" "/bookings/$BOOKING_ID/cancel" "{
+      \"reason\": \"Testing cancellation\"
+    }" "$RESIDENT_TOKEN" > /dev/null
+fi
+
+# Remove from Favorites
+if [ -n "$RESIDENT_TOKEN" ] && [ -n "$SERVICE_ID" ]; then
+    call_api "Remove from Favorites" "DELETE" "/services/favorites/$SERVICE_ID" "" "$RESIDENT_TOKEN" > /dev/null
 fi
 
 #######################################################
@@ -276,9 +309,18 @@ if [ -n "$SEVAK_TOKEN" ]; then
     }" "$SEVAK_TOKEN" > /dev/null
 
     # Sevak-specific endpoints
-    call_api "Get Sevak Jobs" "GET" "/sevak/jobs" "" "$SEVAK_TOKEN" > /dev/null
+    SEVAK_JOBS_RESPONSE=$(call_api "Get Sevak Jobs" "GET" "/sevak/jobs" "" "$SEVAK_TOKEN")
+    JOB_ID=$(echo "$SEVAK_JOBS_RESPONSE" | jq -r '.data[0]._id // .jobs[0]._id // empty' 2>/dev/null)
+
+    if [ -n "$JOB_ID" ]; then
+        echo -e "${GREEN}→ Job ID: $JOB_ID${NC}"
+        call_api "Get Sevak Job Details" "GET" "/sevak/jobs/$JOB_ID" "" "$SEVAK_TOKEN" > /dev/null
+    fi
+
     call_api "Get Sevak Earnings" "GET" "/sevak/earnings" "" "$SEVAK_TOKEN" > /dev/null
     call_api "Get Sevak Performance" "GET" "/sevak/performance" "" "$SEVAK_TOKEN" > /dev/null
+    call_api "Get Sevak Feedback" "GET" "/sevak/feedback" "" "$SEVAK_TOKEN" > /dev/null
+    call_api "Get Sevak Attendance" "GET" "/sevak/attendance" "" "$SEVAK_TOKEN" > /dev/null
 fi
 
 #######################################################
@@ -335,6 +377,143 @@ if [ -n "$VENDOR_TOKEN" ]; then
       \"lastName\": \"Vendor\",
       \"businessName\": \"Test Cleaning Services\"
     }" "$VENDOR_TOKEN" > /dev/null
+fi
+
+#######################################################
+# 4. PAYMENT FLOW (Resident)
+#######################################################
+
+echo -e "\n${BLUE}═══════════════════════════════════════${NC}"
+echo -e "${BLUE}  PAYMENT FLOW - Transaction Testing${NC}"
+echo -e "${BLUE}═══════════════════════════════════════${NC}"
+
+if [ -n "$RESIDENT_TOKEN" ]; then
+    # Create new booking for payment testing
+    PAYMENT_BOOKING_RESPONSE=$(call_api "Create Booking for Payment" "POST" "/bookings" "{
+      \"serviceId\": \"$SERVICE_ID\",
+      \"scheduledDate\": \"2025-12-01\",
+      \"scheduledTime\": \"2:00 PM\",
+      \"address\": {
+        \"flatNumber\": \"202\",
+        \"building\": \"Tower B\",
+        \"city\": \"Mumbai\",
+        \"pincode\": \"400001\"
+      }
+    }" "$RESIDENT_TOKEN")
+
+    PAYMENT_BOOKING_ID=$(echo "$PAYMENT_BOOKING_RESPONSE" | jq -r '.data.booking._id // .booking._id // empty' 2>/dev/null)
+
+    if [ -n "$PAYMENT_BOOKING_ID" ]; then
+        echo -e "${GREEN}→ Payment Booking ID: $PAYMENT_BOOKING_ID${NC}"
+
+        # Get payment history
+        call_api "Get Payment History" "GET" "/payments/history" "" "$RESIDENT_TOKEN" > /dev/null
+
+        # Note: Create order, verify, invoice, and refund require actual Razorpay integration
+        # These will likely fail in dev mode but we test the endpoints exist
+        call_api "Create Payment Order" "POST" "/payments/create-order" "{
+          \"bookingId\": \"$PAYMENT_BOOKING_ID\",
+          \"amount\": 500
+        }" "$RESIDENT_TOKEN" > /dev/null || true
+
+        call_api "Get Invoice" "GET" "/payments/invoice/$PAYMENT_BOOKING_ID" "" "$RESIDENT_TOKEN" > /dev/null || true
+    fi
+fi
+
+#######################################################
+# 5. RATING & FEEDBACK FLOW
+#######################################################
+
+echo -e "\n${BLUE}═══════════════════════════════════════${NC}"
+echo -e "${BLUE}  RATING FLOW - Review System${NC}"
+echo -e "${BLUE}═══════════════════════════════════════${NC}"
+
+if [ -n "$RESIDENT_TOKEN" ] && [ -n "$BOOKING_ID" ] && [ -n "$SEVAK_ID" ]; then
+    # Create rating for completed booking
+    RATING_RESPONSE=$(call_api "Create Rating" "POST" "/ratings" "{
+      \"bookingId\": \"$BOOKING_ID\",
+      \"ratedTo\": \"$SEVAK_ID\",
+      \"rating\": 5,
+      \"review\": \"Excellent service!\",
+      \"categories\": {
+        \"punctuality\": 5,
+        \"quality\": 5,
+        \"behavior\": 5
+      }
+    }" "$RESIDENT_TOKEN")
+
+    RATING_ID=$(echo "$RATING_RESPONSE" | jq -r '.data.rating._id // .rating._id // .data._id // empty' 2>/dev/null)
+
+    if [ -n "$RATING_ID" ]; then
+        echo -e "${GREEN}→ Rating ID: $RATING_ID${NC}"
+
+        # Update rating
+        call_api "Update Rating" "PUT" "/ratings/$RATING_ID" "{
+          \"rating\": 4,
+          \"review\": \"Good service, updated review\"
+        }" "$RESIDENT_TOKEN" > /dev/null
+    fi
+
+    # Get booking rating
+    call_api "Get Booking Rating" "GET" "/ratings/booking/$BOOKING_ID" "" "$RESIDENT_TOKEN" > /dev/null
+fi
+
+# Get sevak ratings (public)
+if [ -n "$SEVAK_ID" ]; then
+    call_api "Get Sevak Ratings" "GET" "/ratings/sevak/$SEVAK_ID" > /dev/null
+fi
+
+#######################################################
+# 6. AUTH FLOWS (Additional)
+#######################################################
+
+echo -e "\n${BLUE}═══════════════════════════════════════${NC}"
+echo -e "${BLUE}  AUTH FLOW - Advanced Features${NC}"
+echo -e "${BLUE}═══════════════════════════════════════${NC}"
+
+# Test refresh token
+if [ -n "$RESIDENT_TOKEN" ]; then
+    # Get refresh token from login response (if available)
+    REFRESH_TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.data.refreshToken // .refreshToken // empty' 2>/dev/null)
+
+    if [ -n "$REFRESH_TOKEN" ]; then
+        call_api "Refresh Access Token" "POST" "/auth/refresh-token" "{
+          \"refreshToken\": \"$REFRESH_TOKEN\"
+        }" > /dev/null
+    fi
+fi
+
+# Test forgot/reset password flow
+TEMP_USER_RESPONSE=$(call_api "Register Temp User for Password Reset" "POST" "/auth/register" "{
+  \"phoneNumber\": \"+9196666${TIMESTAMP:(-5)}\",
+  \"email\": \"temp${TIMESTAMP}@test.com\",
+  \"password\": \"TempPass123!\",
+  \"role\": \"resident\",
+  \"fullName\": \"Temp User ${TIMESTAMP}\"
+}")
+
+TEMP_USER_EMAIL=$(echo "$TEMP_USER_RESPONSE" | jq -r '.data.user.email // .user.email // empty' 2>/dev/null)
+
+if [ -n "$TEMP_USER_EMAIL" ]; then
+    FORGOT_RESPONSE=$(call_api "Forgot Password" "POST" "/auth/forgot-password" "{
+      \"phoneOrEmail\": \"$TEMP_USER_EMAIL\"
+    }")
+
+    RESET_USER_ID=$(echo "$FORGOT_RESPONSE" | jq -r '.data.userId // .userId // empty' 2>/dev/null)
+    RESET_OTP=$(echo "$FORGOT_RESPONSE" | jq -r '.data.otp // .otp // empty' 2>/dev/null)
+
+    if [ -n "$RESET_USER_ID" ] && [ -n "$RESET_OTP" ]; then
+        call_api "Reset Password" "POST" "/auth/reset-password" "{
+          \"userId\": \"$RESET_USER_ID\",
+          \"otp\": \"$RESET_OTP\",
+          \"newPassword\": \"NewPass123!\"
+        }" > /dev/null
+    fi
+fi
+
+# Test logout
+if [ -n "$RESIDENT_TOKEN" ]; then
+    call_api "Logout" "POST" "/auth/logout" "" "$RESIDENT_TOKEN" > /dev/null
 fi
 
 #######################################################
