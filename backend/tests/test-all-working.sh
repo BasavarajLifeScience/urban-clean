@@ -35,8 +35,9 @@ echo -e "${BLUE}║  URBAN CLEAN - COMPLETE API TEST      ║${NC}"
 echo -e "${BLUE}║  All Verified Working Endpoints        ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}\n"
 
-# Helper functions
-test_endpoint() {
+# Helper function - makes API call and displays result
+# Returns the response body via stdout
+call_api() {
     local name=$1
     local method=$2
     local endpoint=$3
@@ -44,10 +45,11 @@ test_endpoint() {
     local token=$5
 
     ((TESTS_TOTAL++))
-    echo -e "\n${YELLOW}[$TESTS_TOTAL] Testing: $name${NC}"
+    echo -e "\n${YELLOW}[$TESTS_TOTAL] Testing: $name${NC}" >&2
 
     sleep 0.3  # Avoid rate limiting
 
+    local RESPONSE
     if [ -n "$token" ]; then
         if [ -n "$data" ]; then
             RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X "$method" "$API_URL$endpoint" \
@@ -72,19 +74,22 @@ test_endpoint() {
         fi
     fi
 
-    HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | sed 's/HTTP_STATUS://')
-    BODY=$(echo "$RESPONSE" | sed '/HTTP_STATUS:/d')
+    local HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | sed 's/HTTP_STATUS://')
+    local BODY=$(echo "$RESPONSE" | sed '/HTTP_STATUS:/d')
 
+    # Display result to stderr
     if [[ "$HTTP_STATUS" =~ ^2 ]]; then
-        echo -e "${GREEN}✓ PASS${NC} (HTTP $HTTP_STATUS)"
+        echo -e "${GREEN}✓ PASS${NC} (HTTP $HTTP_STATUS)" >&2
         ((TESTS_PASSED++))
-        echo "$BODY" | jq '.' 2>/dev/null || echo "$BODY"
     else
-        echo -e "${RED}✗ FAIL${NC} (HTTP $HTTP_STATUS)"
+        echo -e "${RED}✗ FAIL${NC} (HTTP $HTTP_STATUS)" >&2
         ((TESTS_FAILED++))
-        echo "$BODY" | jq '.' 2>/dev/null || echo "$BODY"
     fi
 
+    # Pretty print to stderr
+    echo "$BODY" | jq '.' 2>/dev/null >&2 || echo "$BODY" >&2
+
+    # Return raw body to stdout for capture
     echo "$BODY"
 }
 
@@ -96,8 +101,8 @@ echo -e "\n${BLUE}════════════════════�
 echo -e "${BLUE}  RESIDENT FLOW - Complete Journey${NC}"
 echo -e "${BLUE}═══════════════════════════════════════${NC}"
 
-# Register or Login
-REGISTER_RESPONSE=$(test_endpoint "Register Resident" "POST" "/auth/register" "{
+# Register Resident
+REGISTER_RESPONSE=$(call_api "Register Resident" "POST" "/auth/register" "{
   \"phoneNumber\": \"+9199999${TIMESTAMP:(-5)}\",
   \"email\": \"resident${TIMESTAMP}@test.com\",
   \"password\": \"SecurePass123!\",
@@ -109,12 +114,13 @@ RESIDENT_ID=$(echo "$REGISTER_RESPONSE" | jq -r '.data.userId // .userId // empt
 DEV_OTP=$(echo "$REGISTER_RESPONSE" | jq -r '.data.otp // .otp // empty' 2>/dev/null)
 
 if [ -n "$RESIDENT_ID" ]; then
-    echo -e "${GREEN}→ User ID: $RESIDENT_ID${NC}"
+    echo -e "${GREEN}→ Resident ID: $RESIDENT_ID${NC}"
+
     if [ -n "$DEV_OTP" ]; then
         echo -e "${GREEN}→ OTP: $DEV_OTP${NC}"
 
         # Verify OTP
-        OTP_RESPONSE=$(test_endpoint "Verify OTP" "POST" "/auth/verify-otp" "{
+        OTP_RESPONSE=$(call_api "Verify Resident OTP" "POST" "/auth/verify-otp" "{
           \"userId\": \"$RESIDENT_ID\",
           \"otp\": \"$DEV_OTP\"
         }")
@@ -125,7 +131,7 @@ fi
 
 # Login if no token yet
 if [ -z "$RESIDENT_TOKEN" ]; then
-    LOGIN_RESPONSE=$(test_endpoint "Login Resident" "POST" "/auth/login" "{
+    LOGIN_RESPONSE=$(call_api "Login Resident" "POST" "/auth/login" "{
       \"phoneOrEmail\": \"resident${TIMESTAMP}@test.com\",
       \"password\": \"SecurePass123!\"
     }")
@@ -134,12 +140,13 @@ if [ -z "$RESIDENT_TOKEN" ]; then
 fi
 
 if [ -n "$RESIDENT_TOKEN" ]; then
-    echo -e "${GREEN}→ Authenticated successfully${NC}\n"
+    echo -e "${GREEN}→ Resident authenticated successfully${NC}\n"
 
-    # Profile endpoints
-    test_endpoint "Get Profile" "GET" "/users/profile" "" "$RESIDENT_TOKEN"
+    # Get Profile
+    call_api "Get Resident Profile" "GET" "/users/profile" "" "$RESIDENT_TOKEN" > /dev/null
 
-    test_endpoint "Update Profile" "PUT" "/users/profile" "{
+    # Update Profile
+    call_api "Update Resident Profile" "PUT" "/users/profile" "{
       \"firstName\": \"Test\",
       \"lastName\": \"Resident\",
       \"address\": {
@@ -148,34 +155,40 @@ if [ -n "$RESIDENT_TOKEN" ]; then
         \"city\": \"Mumbai\",
         \"pincode\": \"400001\"
       }
-    }" "$RESIDENT_TOKEN"
+    }" "$RESIDENT_TOKEN" > /dev/null
 fi
 
 # Service endpoints (public)
-CATEGORIES_RESPONSE=$(test_endpoint "Get Categories" "GET" "/services/categories")
+CATEGORIES_RESPONSE=$(call_api "Get Service Categories" "GET" "/services/categories")
 
-SERVICES_RESPONSE=$(test_endpoint "Browse Services" "GET" "/services?page=1&limit=5")
-SERVICE_ID=$(echo "$SERVICES_RESPONSE" | jq -r '.data[0]._id // empty' 2>/dev/null)
+SERVICES_RESPONSE=$(call_api "Browse Services" "GET" "/services?page=1&limit=5")
+SERVICE_ID=$(echo "$SERVICES_RESPONSE" | jq -r '.data[0]._id // .services[0]._id // empty' 2>/dev/null)
 
 if [ -n "$SERVICE_ID" ]; then
     echo -e "${GREEN}→ Service ID: $SERVICE_ID${NC}"
-    test_endpoint "Get Service Details" "GET" "/services/$SERVICE_ID"
+
+    # Get Service Details
+    call_api "Get Service Details" "GET" "/services/$SERVICE_ID" > /dev/null
 fi
 
 # Authenticated service features
 if [ -n "$RESIDENT_TOKEN" ] && [ -n "$SERVICE_ID" ]; then
-    test_endpoint "Add to Favorites" "POST" "/services/favorites" "{
+    # Add to Favorites
+    call_api "Add to Favorites" "POST" "/services/favorites" "{
       \"serviceId\": \"$SERVICE_ID\"
-    }" "$RESIDENT_TOKEN"
+    }" "$RESIDENT_TOKEN" > /dev/null
 
-    test_endpoint "Get Favorites" "GET" "/services/favorites" "" "$RESIDENT_TOKEN"
+    # Get Favorites
+    call_api "Get Favorites" "GET" "/services/favorites" "" "$RESIDENT_TOKEN" > /dev/null
 fi
 
 # Booking endpoints
 if [ -n "$RESIDENT_TOKEN" ] && [ -n "$SERVICE_ID" ]; then
-    test_endpoint "Get Available Slots" "GET" "/bookings/available-slots?serviceId=$SERVICE_ID&date=2025-11-25" "" "$RESIDENT_TOKEN"
+    # Get Available Slots
+    call_api "Get Available Slots" "GET" "/bookings/available-slots?serviceId=$SERVICE_ID&date=2025-11-25" "" "$RESIDENT_TOKEN" > /dev/null
 
-    BOOKING_RESPONSE=$(test_endpoint "Create Booking" "POST" "/bookings" "{
+    # Create Booking
+    BOOKING_RESPONSE=$(call_api "Create Booking" "POST" "/bookings" "{
       \"serviceId\": \"$SERVICE_ID\",
       \"scheduledDate\": \"2025-11-25\",
       \"scheduledTime\": \"10:00 AM\",
@@ -188,19 +201,22 @@ if [ -n "$RESIDENT_TOKEN" ] && [ -n "$SERVICE_ID" ]; then
       \"specialInstructions\": \"Test booking\"
     }" "$RESIDENT_TOKEN")
 
-    BOOKING_ID=$(echo "$BOOKING_RESPONSE" | jq -r '.data.booking._id // .booking._id // empty' 2>/dev/null)
+    BOOKING_ID=$(echo "$BOOKING_RESPONSE" | jq -r '.data.booking._id // .booking._id // .data._id // ._id // empty' 2>/dev/null)
 
     if [ -n "$BOOKING_ID" ]; then
         echo -e "${GREEN}→ Booking ID: $BOOKING_ID${NC}"
 
-        test_endpoint "Get My Bookings" "GET" "/bookings/my-bookings" "" "$RESIDENT_TOKEN"
-        test_endpoint "Get Booking Details" "GET" "/bookings/$BOOKING_ID" "" "$RESIDENT_TOKEN"
+        # Get My Bookings
+        call_api "Get My Bookings" "GET" "/bookings/my-bookings" "" "$RESIDENT_TOKEN" > /dev/null
+
+        # Get Booking Details
+        call_api "Get Booking Details" "GET" "/bookings/$BOOKING_ID" "" "$RESIDENT_TOKEN" > /dev/null
     fi
 fi
 
 # Notifications
 if [ -n "$RESIDENT_TOKEN" ]; then
-    test_endpoint "Get Notifications" "GET" "/notifications" "" "$RESIDENT_TOKEN"
+    call_api "Get Notifications" "GET" "/notifications" "" "$RESIDENT_TOKEN" > /dev/null
 fi
 
 #######################################################
@@ -211,7 +227,8 @@ echo -e "\n${BLUE}════════════════════�
 echo -e "${BLUE}  SEVAK FLOW - Complete Journey${NC}"
 echo -e "${BLUE}═══════════════════════════════════════${NC}"
 
-SEVAK_REG_RESPONSE=$(test_endpoint "Register Sevak" "POST" "/auth/register" "{
+# Register Sevak
+SEVAK_REG_RESPONSE=$(call_api "Register Sevak" "POST" "/auth/register" "{
   \"phoneNumber\": \"+9198888${TIMESTAMP:(-5)}\",
   \"email\": \"sevak${TIMESTAMP}@test.com\",
   \"password\": \"SecurePass123!\",
@@ -225,7 +242,8 @@ SEVAK_OTP=$(echo "$SEVAK_REG_RESPONSE" | jq -r '.data.otp // .otp // empty' 2>/d
 if [ -n "$SEVAK_ID" ] && [ -n "$SEVAK_OTP" ]; then
     echo -e "${GREEN}→ Sevak ID: $SEVAK_ID${NC}"
 
-    SEVAK_OTP_RESPONSE=$(test_endpoint "Verify Sevak OTP" "POST" "/auth/verify-otp" "{
+    # Verify OTP
+    SEVAK_OTP_RESPONSE=$(call_api "Verify Sevak OTP" "POST" "/auth/verify-otp" "{
       \"userId\": \"$SEVAK_ID\",
       \"otp\": \"$SEVAK_OTP\"
     }")
@@ -233,8 +251,9 @@ if [ -n "$SEVAK_ID" ] && [ -n "$SEVAK_OTP" ]; then
     SEVAK_TOKEN=$(echo "$SEVAK_OTP_RESPONSE" | jq -r '.data.accessToken // .accessToken // empty' 2>/dev/null)
 fi
 
+# Login if no token
 if [ -z "$SEVAK_TOKEN" ]; then
-    SEVAK_LOGIN_RESPONSE=$(test_endpoint "Login Sevak" "POST" "/auth/login" "{
+    SEVAK_LOGIN_RESPONSE=$(call_api "Login Sevak" "POST" "/auth/login" "{
       \"phoneOrEmail\": \"sevak${TIMESTAMP}@test.com\",
       \"password\": \"SecurePass123!\"
     }")
@@ -243,20 +262,23 @@ if [ -z "$SEVAK_TOKEN" ]; then
 fi
 
 if [ -n "$SEVAK_TOKEN" ]; then
-    echo -e "${GREEN}→ Sevak authenticated${NC}\n"
+    echo -e "${GREEN}→ Sevak authenticated successfully${NC}\n"
 
-    test_endpoint "Get Sevak Profile" "GET" "/users/profile" "" "$SEVAK_TOKEN"
+    # Get Profile
+    call_api "Get Sevak Profile" "GET" "/users/profile" "" "$SEVAK_TOKEN" > /dev/null
 
-    test_endpoint "Update Sevak Profile" "PUT" "/users/profile" "{
+    # Update Profile
+    call_api "Update Sevak Profile" "PUT" "/users/profile" "{
       \"firstName\": \"Test\",
       \"lastName\": \"Sevak\",
       \"skills\": [\"Cleaning\", \"Maintenance\"],
       \"experience\": 5
-    }" "$SEVAK_TOKEN"
+    }" "$SEVAK_TOKEN" > /dev/null
 
-    test_endpoint "Get Sevak Jobs" "GET" "/sevak/jobs" "" "$SEVAK_TOKEN"
-    test_endpoint "Get Sevak Earnings" "GET" "/sevak/earnings" "" "$SEVAK_TOKEN"
-    test_endpoint "Get Sevak Performance" "GET" "/sevak/performance" "" "$SEVAK_TOKEN"
+    # Sevak-specific endpoints
+    call_api "Get Sevak Jobs" "GET" "/sevak/jobs" "" "$SEVAK_TOKEN" > /dev/null
+    call_api "Get Sevak Earnings" "GET" "/sevak/earnings" "" "$SEVAK_TOKEN" > /dev/null
+    call_api "Get Sevak Performance" "GET" "/sevak/performance" "" "$SEVAK_TOKEN" > /dev/null
 fi
 
 #######################################################
@@ -267,7 +289,8 @@ echo -e "\n${BLUE}════════════════════�
 echo -e "${BLUE}  VENDOR FLOW - Complete Journey${NC}"
 echo -e "${BLUE}═══════════════════════════════════════${NC}"
 
-VENDOR_REG_RESPONSE=$(test_endpoint "Register Vendor" "POST" "/auth/register" "{
+# Register Vendor
+VENDOR_REG_RESPONSE=$(call_api "Register Vendor" "POST" "/auth/register" "{
   \"phoneNumber\": \"+9197777${TIMESTAMP:(-5)}\",
   \"email\": \"vendor${TIMESTAMP}@test.com\",
   \"password\": \"SecurePass123!\",
@@ -281,7 +304,8 @@ VENDOR_OTP=$(echo "$VENDOR_REG_RESPONSE" | jq -r '.data.otp // .otp // empty' 2>
 if [ -n "$VENDOR_ID" ] && [ -n "$VENDOR_OTP" ]; then
     echo -e "${GREEN}→ Vendor ID: $VENDOR_ID${NC}"
 
-    VENDOR_OTP_RESPONSE=$(test_endpoint "Verify Vendor OTP" "POST" "/auth/verify-otp" "{
+    # Verify OTP
+    VENDOR_OTP_RESPONSE=$(call_api "Verify Vendor OTP" "POST" "/auth/verify-otp" "{
       \"userId\": \"$VENDOR_ID\",
       \"otp\": \"$VENDOR_OTP\"
     }")
@@ -289,8 +313,9 @@ if [ -n "$VENDOR_ID" ] && [ -n "$VENDOR_OTP" ]; then
     VENDOR_TOKEN=$(echo "$VENDOR_OTP_RESPONSE" | jq -r '.data.accessToken // .accessToken // empty' 2>/dev/null)
 fi
 
+# Login if no token
 if [ -z "$VENDOR_TOKEN" ]; then
-    VENDOR_LOGIN_RESPONSE=$(test_endpoint "Login Vendor" "POST" "/auth/login" "{
+    VENDOR_LOGIN_RESPONSE=$(call_api "Login Vendor" "POST" "/auth/login" "{
       \"phoneOrEmail\": \"vendor${TIMESTAMP}@test.com\",
       \"password\": \"SecurePass123!\"
     }")
@@ -299,15 +324,17 @@ if [ -z "$VENDOR_TOKEN" ]; then
 fi
 
 if [ -n "$VENDOR_TOKEN" ]; then
-    echo -e "${GREEN}→ Vendor authenticated${NC}\n"
+    echo -e "${GREEN}→ Vendor authenticated successfully${NC}\n"
 
-    test_endpoint "Get Vendor Profile" "GET" "/users/profile" "" "$VENDOR_TOKEN"
+    # Get Profile
+    call_api "Get Vendor Profile" "GET" "/users/profile" "" "$VENDOR_TOKEN" > /dev/null
 
-    test_endpoint "Update Vendor Profile" "PUT" "/users/profile" "{
+    # Update Profile
+    call_api "Update Vendor Profile" "PUT" "/users/profile" "{
       \"firstName\": \"Test\",
       \"lastName\": \"Vendor\",
       \"businessName\": \"Test Cleaning Services\"
-    }" "$VENDOR_TOKEN"
+    }" "$VENDOR_TOKEN" > /dev/null
 fi
 
 #######################################################
@@ -322,10 +349,14 @@ echo -e "Total Tests: ${BLUE}$TESTS_TOTAL${NC}"
 echo -e "Passed: ${GREEN}$TESTS_PASSED${NC}"
 echo -e "Failed: ${RED}$TESTS_FAILED${NC}"
 
-SUCCESS_RATE=$((TESTS_PASSED * 100 / TESTS_TOTAL))
-echo -e "Success Rate: ${BLUE}${SUCCESS_RATE}%${NC}\n"
+if [ $TESTS_TOTAL -gt 0 ]; then
+    SUCCESS_RATE=$((TESTS_PASSED * 100 / TESTS_TOTAL))
+    echo -e "Success Rate: ${BLUE}${SUCCESS_RATE}%${NC}\n"
+else
+    echo -e "Success Rate: ${RED}N/A (No tests run)${NC}\n"
+fi
 
-if [ $TESTS_FAILED -eq 0 ]; then
+if [ $TESTS_FAILED -eq 0 ] && [ $TESTS_TOTAL -gt 0 ]; then
     echo -e "${GREEN}╔════════════════════════════════════════╗${NC}"
     echo -e "${GREEN}║  ✓✓✓  ALL TESTS PASSED!  ✓✓✓          ║${NC}"
     echo -e "${GREEN}║  API is fully functional               ║${NC}"
@@ -333,7 +364,7 @@ if [ $TESTS_FAILED -eq 0 ]; then
     exit 0
 else
     echo -e "${YELLOW}╔════════════════════════════════════════╗${NC}"
-    echo -e "${YELLOW}║  Some tests failed                     ║${NC}"
+    echo -e "${YELLOW}║  Some tests failed or no tests run     ║${NC}"
     echo -e "${YELLOW}║  Review output above for details       ║${NC}"
     echo -e "${YELLOW}╚════════════════════════════════════════╝${NC}\n"
     exit 1
