@@ -22,7 +22,7 @@ const refreshTokenSchema = new mongoose.Schema({
 // Index for automatic deletion of expired tokens
 refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 refreshTokenSchema.index({ userId: 1 });
-refreshTokenSchema.index({ token: 1 });
+// Note: token already has a unique index from schema definition
 
 // Method to check if token is expired
 refreshTokenSchema.methods.isExpired = function() {

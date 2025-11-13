@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Urban Clean",
-    "slug": "urban-clean",
+    "name": "Society Booking",
+    "slug": "society-booking-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -16,17 +16,28 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.urbanclean.app"
+      "bundleIdentifier": "com.societybooking.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.urbanclean.app"
+      "package": "com.societybooking.app",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "apiUrl": "http://localhost:5000/api/v1"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }
