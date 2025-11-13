@@ -39,7 +39,7 @@ const ratingSchema = new mongoose.Schema({
 // Indexes
 ratingSchema.index({ ratedTo: 1 });
 ratingSchema.index({ ratedBy: 1 });
-ratingSchema.index({ bookingId: 1 });
+// Note: bookingId already has a unique index from schema definition
 ratingSchema.index({ rating: -1 });
 
 const Rating = mongoose.model('Rating', ratingSchema);

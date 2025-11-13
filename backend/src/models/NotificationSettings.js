@@ -46,7 +46,7 @@ const notificationSettingsSchema = new mongoose.Schema({
 });
 
 // Indexes
-notificationSettingsSchema.index({ userId: 1 });
+// Note: userId already has a unique index from schema definition
 
 const NotificationSettings = mongoose.model('NotificationSettings', notificationSettingsSchema);
 
