@@ -262,16 +262,19 @@ const resetPassword = async (req, res, next) => {
  */
 const logout = async (req, res, next) => {
   try {
-    const { refreshToken } = req.body;
+    const { refreshToken } = req.body || {};
 
     if (refreshToken) {
-      // Delete refresh token
-      await RefreshToken.deleteOne({ token: refreshToken });
+      // Delete refresh token (ignore errors if token doesn't exist)
+      await RefreshToken.deleteOne({ token: refreshToken }).catch(() => {});
     }
 
+    // Always return success - logout is idempotent
     return sendSuccess(res, 200, 'Logged out successfully');
   } catch (error) {
-    next(error);
+    // Logout should never fail - just log and return success
+    logger.error('Logout error:', error);
+    return sendSuccess(res, 200, 'Logged out successfully');
   }
 };
 

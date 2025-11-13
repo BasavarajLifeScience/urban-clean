@@ -17,6 +17,12 @@ const createOrder = async (bookingId, amount, userId) => {
       throw new Error('Booking not found');
     }
 
+    // Check if Razorpay is configured
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET ||
+        process.env.RAZORPAY_KEY_ID === 'rzp_test_xxxxxxxxxxxxx') {
+      throw new Error('Payment gateway not configured. Please contact support.');
+    }
+
     // Create Razorpay order
     const options = {
       amount: Math.round(amount * 100), // amount in paise
