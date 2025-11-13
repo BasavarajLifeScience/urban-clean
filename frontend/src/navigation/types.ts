@@ -24,6 +24,7 @@ export type ResidentStackParamList = {
   BookingDetail: { bookingId: string };
   CreateBooking: { serviceId: string };
   Payment: { bookingId: string };
+  Rating: { bookingId: string; sevakId: string };
 };
 
 // Sevak Stack

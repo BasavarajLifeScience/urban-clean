@@ -30,6 +30,8 @@ import {
   CreateBookingScreen,
   MyBookingsScreen,
   BookingDetailScreen,
+  PaymentScreen,
+  RatingScreen,
 } from './src/screens/resident';
 
 // Sevak Screens
@@ -39,6 +41,9 @@ import {
   SevakJobDetailScreen,
   SevakEarningsScreen,
 } from './src/screens/sevak';
+
+// Profile Screen
+import { ProfileScreen } from './src/screens/profile';
 
 // Placeholder for other screens
 import { Text, View, ActivityIndicator } from 'react-native';
@@ -110,14 +115,13 @@ const ResidentTabs = () => {
       />
       <Tab.Screen
         name="Profile"
+        component={ProfileScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account" size={size} color={color} />
           ),
         }}
-      >
-        {() => <PlaceholderScreen title="Profile - Coming Soon" />}
-      </Tab.Screen>
+      />
     </Tab.Navigator>
   );
 };
@@ -150,10 +154,14 @@ const ResidentNavigator = () => {
       />
       <ResidentStack.Screen
         name="Payment"
+        component={PaymentScreen}
         options={{ title: 'Payment' }}
-      >
-        {() => <PlaceholderScreen title="Payment - Coming Soon" />}
-      </ResidentStack.Screen>
+      />
+      <ResidentStack.Screen
+        name="Rating"
+        component={RatingScreen}
+        options={{ title: 'Rate Service' }}
+      />
     </ResidentStack.Navigator>
   );
 };
@@ -197,14 +205,13 @@ const SevakTabs = () => {
       />
       <Tab.Screen
         name="Profile"
+        component={ProfileScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account" size={size} color={color} />
           ),
         }}
-      >
-        {() => <PlaceholderScreen title="Profile - Coming Soon" />}
-      </Tab.Screen>
+      />
     </Tab.Navigator>
   );
 };
