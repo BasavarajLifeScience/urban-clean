@@ -106,7 +106,7 @@ const profileSchema = new mongoose.Schema({
 });
 
 // Indexes
-profileSchema.index({ userId: 1 });
+// Note: userId already has a unique index from schema definition
 profileSchema.index({ 'address.society': 1 });
 profileSchema.index({ skills: 1 });
 

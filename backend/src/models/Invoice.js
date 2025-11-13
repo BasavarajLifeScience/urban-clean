@@ -57,7 +57,7 @@ const invoiceSchema = new mongoose.Schema({
 });
 
 // Indexes
-invoiceSchema.index({ invoiceNumber: 1 });
+// Note: invoiceNumber already has a unique index from schema definition
 invoiceSchema.index({ bookingId: 1 });
 invoiceSchema.index({ userId: 1 });
 

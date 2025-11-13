@@ -51,8 +51,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-userSchema.index({ phoneNumber: 1 });
-userSchema.index({ email: 1 });
+// Note: phoneNumber and email already have unique indexes from schema definition
 userSchema.index({ role: 1, isActive: 1 });
 
 // Hash password before saving
