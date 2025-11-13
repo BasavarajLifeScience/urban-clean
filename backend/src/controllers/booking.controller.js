@@ -130,7 +130,7 @@ const rescheduleBooking = async (req, res, next) => {
     }
 
     // Check permission
-    if (booking.residentId.toString() !== userId) {
+    if (booking.residentId.toString() !== userId.toString()) {
       throw new ForbiddenError('You do not have permission to reschedule this booking');
     }
 
@@ -177,7 +177,7 @@ const cancelBooking = async (req, res, next) => {
     }
 
     // Check permission
-    if (booking.residentId.toString() !== userId) {
+    if (booking.residentId.toString() !== userId.toString()) {
       throw new ForbiddenError('You do not have permission to cancel this booking');
     }
 

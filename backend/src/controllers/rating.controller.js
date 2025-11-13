@@ -2,6 +2,7 @@ const Rating = require('../models/Rating');
 const Booking = require('../models/Booking');
 const Service = require('../models/Service');
 const User = require('../models/User');
+const mongoose = require('mongoose');
 const { sendSuccess, sendPaginated } = require('../utils/response.utils');
 const { NotFoundError, ValidationError, ForbiddenError } = require('../utils/errors');
 const { getPagination } = require('../utils/helpers');
@@ -22,7 +23,7 @@ const createRating = async (req, res, next) => {
     }
 
     // Check if user is the resident of this booking
-    if (booking.residentId.toString() !== userId) {
+    if (booking.residentId.toString() !== userId.toString()) {
       throw new ForbiddenError('You can only rate bookings you created');
     }
 
@@ -88,7 +89,7 @@ const getSevakRatings = async (req, res, next) => {
 
     // Calculate average rating
     const ratingStats = await Rating.aggregate([
-      { $match: { ratedTo: mongoose.Types.ObjectId(sevakId) } },
+      { $match: { ratedTo: new mongoose.Types.ObjectId(sevakId) } },
       {
         $group: {
           _id: null,
