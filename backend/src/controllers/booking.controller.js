@@ -13,6 +13,10 @@ const createBooking = async (req, res, next) => {
     const residentId = req.user.userId;
     const { serviceId, scheduledDate, scheduledTime, address, specialInstructions } = req.body;
 
+    console.log('🎫 [Booking Controller] Creating booking for resident:', residentId);
+    console.log('📋 [Booking Controller] Service:', serviceId);
+    console.log('📅 [Booking Controller] Date/Time:', scheduledDate, scheduledTime);
+
     // Get service details
     const service = await Service.findById(serviceId);
 
@@ -37,6 +41,9 @@ const createBooking = async (req, res, next) => {
       totalAmount: service.basePrice,
       checkInOTP: generateOTP(6),
     });
+
+    console.log('✅ [Booking Controller] Booking created:', booking._id);
+    console.log('🏠 [Booking Controller] Stored residentId:', booking.residentId);
 
     // Increment booking count for service
     service.bookingCount += 1;
