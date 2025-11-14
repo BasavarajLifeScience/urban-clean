@@ -558,7 +558,7 @@ const acceptJob = async (req, res, next) => {
       userId: residentUserId,
       type: 'booking',
       title: 'Sevak Assigned',
-      message: `A service provider has been assigned to your booking #${booking.bookingNumber}`,
+      body: `A service provider has been assigned to your booking #${booking.bookingNumber}`,
       data: { bookingId: booking._id },
     });
 

@@ -356,7 +356,7 @@ export default function BookingsPage() {
                 <select
                   value={selectedSevakId}
                   onChange={(e) => setSelectedSevakId(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 bg-white"
                 >
                   <option value="">Choose a sevak...</option>
                   {sevaks.map((sevak) => (
@@ -380,7 +380,7 @@ export default function BookingsPage() {
                   onChange={(e) => setAssignmentNotes(e.target.value)}
                   rows={3}
                   placeholder="Add any special instructions or notes..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 bg-white"
                 />
               </div>
             </div>

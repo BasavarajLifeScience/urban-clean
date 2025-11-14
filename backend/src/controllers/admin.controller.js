@@ -514,9 +514,9 @@ const assignSevakToBooking = async (req, res, next) => {
     // Send notification to sevak
     await Notification.create({
       userId: sevakId,
-      type: 'job',
+      type: 'booking',
       title: 'New Job Assigned',
-      message: `You have been assigned to booking #${booking.bookingNumber}`,
+      body: `You have been assigned to booking #${booking.bookingNumber}`,
       data: { bookingId: booking._id },
     });
 
