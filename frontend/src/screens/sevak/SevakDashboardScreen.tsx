@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Text, Card, Button, ActivityIndicator, Chip } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+import { Text, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { SevakStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
 import { sevakApi } from '../../services/api';
 import { Job, PerformanceMetrics } from '../../types';
+import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
 type SevakDashboardScreenNavigationProp = NativeStackNavigationProp<SevakStackParamList>;
 
@@ -71,361 +74,709 @@ export const SevakDashboardScreen = () => {
   };
 
   const getJobStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: '#FF9800',
-      confirmed: '#2196F3',
-      'in-progress': '#9C27B0',
-      completed: '#4CAF50',
-      cancelled: '#F44336',
+    const statusColors: Record<string, string> = {
+      pending: colors.warning,
+      confirmed: colors.info,
+      'in-progress': colors.secondary,
+      completed: colors.success,
+      cancelled: colors.error,
     };
-    return colors[status] || '#757575';
+    return statusColors[status] || colors.gray[500];
+  };
+
+  const getJobStatusIcon = (status: string) => {
+    const statusIcons: Record<string, string> = {
+      pending: 'clock-outline',
+      confirmed: 'check-circle-outline',
+      'in-progress': 'progress-clock',
+      completed: 'check-all',
+      cancelled: 'close-circle-outline',
+    };
+    return statusIcons[status] || 'information-outline';
   };
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2196F3" />
-      </View>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium]}
+        style={styles.centered}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium, colors.backgroundLight]}
+        style={styles.gradient}
+        locations={[0, 0.3, 1]}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text variant="headlineMedium" style={styles.greeting}>
-            Good day,
-          </Text>
-          <Text variant="titleLarge" style={styles.userName}>
-            {user?.fullName || 'Sevak'}
-          </Text>
-        </View>
-
-        {/* Stats Cards */}
-        <View style={styles.statsContainer}>
-          <Card style={[styles.statCard, styles.primaryCard]}>
-            <Card.Content>
-              <Text variant="titleLarge" style={styles.statNumber}>
-                {todayCount}
-              </Text>
-              <Text variant="bodyMedium" style={styles.statLabel}>
-                Today's Jobs
-              </Text>
-            </Card.Content>
-          </Card>
-
-          <Card style={[styles.statCard, styles.secondaryCard]}>
-            <Card.Content>
-              <Text variant="titleLarge" style={styles.statNumber}>
-                {upcomingCount}
-              </Text>
-              <Text variant="bodyMedium" style={styles.statLabel}>
-                Upcoming
-              </Text>
-            </Card.Content>
-          </Card>
-        </View>
-
-        {/* Earnings Summary */}
-        <Card style={styles.earningsCard}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.cardTitle}>
-              Today's Earnings
-            </Text>
-            <Text variant="displaySmall" style={styles.earningsAmount}>
-              ₹{earnings.today.toFixed(2)}
-            </Text>
-          </Card.Content>
-          <Card.Actions>
-            <Button mode="text" onPress={() => {}}>
-              View Details
-            </Button>
-          </Card.Actions>
-        </Card>
-
-        {/* Performance Metrics */}
-        {performance && (
-          <Card style={styles.performanceCard}>
-            <Card.Content>
-              <Text variant="titleMedium" style={styles.cardTitle}>
-                Performance
-              </Text>
-
-              <View style={styles.metricRow}>
-                <View style={styles.metric}>
-                  <Text variant="titleSmall" style={styles.metricLabel}>
-                    Rating
+        <SafeAreaView style={styles.safeArea}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+              />
+            }
+          >
+            {/* Modern Header */}
+            <View style={styles.header}>
+              <View style={styles.headerContent}>
+                <View>
+                  <Text variant="bodyMedium" style={styles.greeting}>
+                    Good day,
                   </Text>
-                  <Text variant="titleLarge" style={styles.metricValue}>
-                    ⭐ {performance.averageRating?.toFixed(1) || 'N/A'}
+                  <Text variant="headlineMedium" style={styles.userName}>
+                    {user?.fullName || 'Sevak'}
                   </Text>
                 </View>
-
-                <View style={styles.metric}>
-                  <Text variant="titleSmall" style={styles.metricLabel}>
-                    Completed
-                  </Text>
-                  <Text variant="titleLarge" style={styles.metricValue}>
-                    {performance.totalJobsCompleted || 0}
-                  </Text>
-                </View>
-
-                <View style={styles.metric}>
-                  <Text variant="titleSmall" style={styles.metricLabel}>
-                    On-time
-                  </Text>
-                  <Text variant="titleLarge" style={styles.metricValue}>
-                    {performance.onTimeCompletionRate || 0}%
-                  </Text>
-                </View>
-              </View>
-            </Card.Content>
-          </Card>
-        )}
-
-        {/* Today's Jobs */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text variant="titleLarge" style={styles.sectionTitle}>
-              Today's Schedule
-            </Text>
-            <Button mode="text" compact onPress={() => {}}>
-              View All
-            </Button>
-          </View>
-
-          {todayJobs.length > 0 ? (
-            todayJobs.map((job) => (
-              <Card key={job._id} style={styles.jobCard}>
-                <Card.Content>
-                  <View style={styles.jobHeader}>
-                    <Text variant="titleMedium">Job #{job.bookingNumber}</Text>
-                    <Chip
-                      mode="flat"
-                      style={{ backgroundColor: getJobStatusColor(job.status) + '20' }}
-                      textStyle={{ color: getJobStatusColor(job.status) }}
-                    >
-                      {job.status}
-                    </Chip>
-                  </View>
-
-                  <Text variant="bodyMedium" style={styles.jobTime}>
-                    {new Date(job.scheduledDate).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </Text>
-
-                  <View style={styles.jobFooter}>
-                    <Text variant="bodySmall" style={styles.jobAddress}>
-                      📍 {job.address?.area || 'Location'}
-                    </Text>
-                  </View>
-                </Card.Content>
-                <Card.Actions>
-                  <Button
-                    mode="outlined"
-                    onPress={() => {
-                      // Navigate to job detail
-                    }}
+                <TouchableOpacity>
+                  <LinearGradient
+                    colors={[colors.primary, colors.primaryDark]}
+                    style={styles.avatarGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                   >
-                    View Details
-                  </Button>
-                  {job.status === 'confirmed' && (
-                    <Button mode="contained" onPress={() => {}}>
-                      Start Job
-                    </Button>
-                  )}
-                </Card.Actions>
-              </Card>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>No jobs scheduled for today</Text>
-          )}
-        </View>
+                    <MaterialCommunityIcons
+                      name="account-hard-hat"
+                      size={28}
+                      color={colors.white}
+                    />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
 
-        {/* Quick Actions */}
-        <View style={styles.section}>
-          <Text variant="titleLarge" style={styles.sectionTitle}>
-            Quick Actions
-          </Text>
+            {/* Stats Cards */}
+            <View style={styles.statsContainer}>
+              <TouchableOpacity style={styles.statCard}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primaryDark]}
+                  style={styles.statGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={styles.statIconContainer}>
+                    <MaterialCommunityIcons
+                      name="briefcase-clock"
+                      size={32}
+                      color={colors.white}
+                    />
+                  </View>
+                  <Text variant="displaySmall" style={styles.statNumber}>
+                    {todayCount}
+                  </Text>
+                  <Text variant="bodyMedium" style={styles.statLabel}>
+                    Today's Jobs
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
 
-          <View style={styles.quickActions}>
-            <Button
-              mode="outlined"
-              icon="calendar-clock"
-              style={styles.actionButton}
-              onPress={() => {}}
-            >
-              My Schedule
-            </Button>
-            <Button
-              mode="outlined"
-              icon="currency-inr"
-              style={styles.actionButton}
-              onPress={() => {}}
-            >
-              Earnings
-            </Button>
-            <Button
-              mode="outlined"
-              icon="star"
-              style={styles.actionButton}
-              onPress={() => {}}
-            >
-              Feedback
-            </Button>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+              <TouchableOpacity style={styles.statCard}>
+                <LinearGradient
+                  colors={[colors.success, '#047857']}
+                  style={styles.statGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={styles.statIconContainer}>
+                    <MaterialCommunityIcons
+                      name="calendar-check"
+                      size={32}
+                      color={colors.white}
+                    />
+                  </View>
+                  <Text variant="displaySmall" style={styles.statNumber}>
+                    {upcomingCount}
+                  </Text>
+                  <Text variant="bodyMedium" style={styles.statLabel}>
+                    Upcoming
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+
+            {/* Earnings Summary Card */}
+            <TouchableOpacity style={styles.earningsCard}>
+              <LinearGradient
+                colors={[colors.white, colors.gray[50]]}
+                style={styles.earningsGradient}
+              >
+                <View style={styles.earningsContent}>
+                  <View style={styles.earningsLeft}>
+                    <LinearGradient
+                      colors={[colors.warning, '#c2410c']}
+                      style={styles.earningsIcon}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <MaterialCommunityIcons
+                        name="currency-inr"
+                        size={32}
+                        color={colors.white}
+                      />
+                    </LinearGradient>
+                    <View style={styles.earningsInfo}>
+                      <Text variant="bodyMedium" style={styles.earningsLabel}>
+                        Today's Earnings
+                      </Text>
+                      <Text variant="displaySmall" style={styles.earningsAmount}>
+                        ₹{earnings.today.toFixed(2)}
+                      </Text>
+                    </View>
+                  </View>
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={24}
+                    color={colors.gray[400]}
+                  />
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Performance Metrics */}
+            {performance && (
+              <View style={styles.performanceCard}>
+                <LinearGradient
+                  colors={[colors.white, colors.gray[50]]}
+                  style={styles.performanceGradient}
+                >
+                  <Text variant="titleLarge" style={styles.cardTitle}>
+                    Performance
+                  </Text>
+
+                  <View style={styles.metricsGrid}>
+                    <View style={styles.metricItem}>
+                      <LinearGradient
+                        colors={[colors.warning, '#c2410c']}
+                        style={styles.metricIconBg}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <MaterialCommunityIcons
+                          name="star"
+                          size={20}
+                          color={colors.white}
+                        />
+                      </LinearGradient>
+                      <Text variant="titleLarge" style={styles.metricValue}>
+                        {performance.averageRating?.toFixed(1) || 'N/A'}
+                      </Text>
+                      <Text variant="bodySmall" style={styles.metricLabel}>
+                        Rating
+                      </Text>
+                    </View>
+
+                    <View style={styles.metricItem}>
+                      <LinearGradient
+                        colors={[colors.success, '#047857']}
+                        style={styles.metricIconBg}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <MaterialCommunityIcons
+                          name="check-circle"
+                          size={20}
+                          color={colors.white}
+                        />
+                      </LinearGradient>
+                      <Text variant="titleLarge" style={styles.metricValue}>
+                        {performance.totalJobsCompleted || 0}
+                      </Text>
+                      <Text variant="bodySmall" style={styles.metricLabel}>
+                        Completed
+                      </Text>
+                    </View>
+
+                    <View style={styles.metricItem}>
+                      <LinearGradient
+                        colors={[colors.info, '#1e40af']}
+                        style={styles.metricIconBg}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <MaterialCommunityIcons
+                          name="clock-check"
+                          size={20}
+                          color={colors.white}
+                        />
+                      </LinearGradient>
+                      <Text variant="titleLarge" style={styles.metricValue}>
+                        {performance.onTimeCompletionRate || 0}%
+                      </Text>
+                      <Text variant="bodySmall" style={styles.metricLabel}>
+                        On-time
+                      </Text>
+                    </View>
+                  </View>
+                </LinearGradient>
+              </View>
+            )}
+
+            {/* Today's Schedule */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text variant="titleLarge" style={styles.sectionTitle}>
+                  Today's Schedule
+                </Text>
+                <TouchableOpacity>
+                  <Text style={styles.viewAllLink}>View All</Text>
+                </TouchableOpacity>
+              </View>
+
+              {todayJobs.length > 0 ? (
+                todayJobs.map((job) => (
+                  <TouchableOpacity key={job._id} style={styles.jobCard}>
+                    <LinearGradient
+                      colors={[colors.white, colors.gray[50]]}
+                      style={styles.jobCardGradient}
+                    >
+                      <View style={styles.jobCardContent}>
+                        <LinearGradient
+                          colors={[getJobStatusColor(job.status), getJobStatusColor(job.status) + 'CC']}
+                          style={styles.jobIconGradient}
+                        >
+                          <MaterialCommunityIcons
+                            name={getJobStatusIcon(job.status) as any}
+                            size={24}
+                            color={colors.white}
+                          />
+                        </LinearGradient>
+                        <View style={styles.jobInfo}>
+                          <View style={styles.jobHeader}>
+                            <Text variant="titleMedium" style={styles.jobNumber}>
+                              Job #{job.bookingNumber}
+                            </Text>
+                            <View
+                              style={[
+                                styles.statusBadge,
+                                { backgroundColor: getJobStatusColor(job.status) + '20' },
+                              ]}
+                            >
+                              <Text
+                                style={[styles.statusText, { color: getJobStatusColor(job.status) }]}
+                              >
+                                {job.status}
+                              </Text>
+                            </View>
+                          </View>
+                          <View style={styles.jobDetails}>
+                            <View style={styles.jobDetailItem}>
+                              <MaterialCommunityIcons
+                                name="clock-outline"
+                                size={14}
+                                color={colors.gray[600]}
+                              />
+                              <Text variant="bodySmall" style={styles.jobTime}>
+                                {new Date(job.scheduledDate).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </Text>
+                            </View>
+                            {job.address && (
+                              <View style={styles.jobDetailItem}>
+                                <MaterialCommunityIcons
+                                  name="map-marker"
+                                  size={14}
+                                  color={colors.gray[600]}
+                                />
+                                <Text variant="bodySmall" style={styles.jobAddress}>
+                                  {job.address.area}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                      </View>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <MaterialCommunityIcons
+                    name="calendar-blank"
+                    size={48}
+                    color={colors.gray[400]}
+                  />
+                  <Text style={styles.emptyText}>No jobs scheduled for today</Text>
+                  <Text style={styles.emptySubtext}>Check back later for new assignments</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Quick Actions */}
+            <View style={styles.section}>
+              <Text variant="titleLarge" style={styles.sectionTitle}>
+                Quick Actions
+              </Text>
+
+              <View style={styles.quickActionsGrid}>
+                <TouchableOpacity style={styles.actionCard}>
+                  <LinearGradient
+                    colors={[colors.white, colors.gray[50]]}
+                    style={styles.actionGradient}
+                  >
+                    <LinearGradient
+                      colors={[colors.primary, colors.primaryDark]}
+                      style={styles.actionIcon}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <MaterialCommunityIcons
+                        name="calendar-clock"
+                        size={24}
+                        color={colors.white}
+                      />
+                    </LinearGradient>
+                    <Text variant="bodyMedium" style={styles.actionLabel}>
+                      My Schedule
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.actionCard}>
+                  <LinearGradient
+                    colors={[colors.white, colors.gray[50]]}
+                    style={styles.actionGradient}
+                  >
+                    <LinearGradient
+                      colors={[colors.warning, '#c2410c']}
+                      style={styles.actionIcon}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <MaterialCommunityIcons
+                        name="currency-inr"
+                        size={24}
+                        color={colors.white}
+                      />
+                    </LinearGradient>
+                    <Text variant="bodyMedium" style={styles.actionLabel}>
+                      Earnings
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.actionCard}>
+                  <LinearGradient
+                    colors={[colors.white, colors.gray[50]]}
+                    style={styles.actionGradient}
+                  >
+                    <LinearGradient
+                      colors={[colors.success, '#047857']}
+                      style={styles.actionIcon}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <MaterialCommunityIcons
+                        name="star"
+                        size={24}
+                        color={colors.white}
+                      />
+                    </LinearGradient>
+                    <Text variant="bodyMedium" style={styles.actionLabel}>
+                      Feedback
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: spacing.md,
+    color: colors.gray[300],
+    fontSize: 16,
+  },
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: spacing.xxl,
   },
   header: {
-    padding: 24,
-    paddingBottom: 16,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   greeting: {
-    color: '#666666',
+    color: colors.gray[400],
+    marginBottom: spacing.xs,
   },
   userName: {
-    fontWeight: 'bold',
-    color: '#333333',
+    fontWeight: '800',
+    color: colors.white,
+    letterSpacing: -0.5,
+  },
+  avatarGradient: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.md,
   },
   statsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 24,
-    gap: 12,
-    marginBottom: 16,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
+    marginBottom: spacing.lg,
   },
   statCard: {
     flex: 1,
-    elevation: 2,
   },
-  primaryCard: {
-    backgroundColor: '#2196F3',
-  },
-  secondaryCard: {
-    backgroundColor: '#4CAF50',
-  },
-  statNumber: {
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    fontSize: 32,
-  },
-  statLabel: {
-    color: '#FFFFFF',
-    opacity: 0.9,
-  },
-  earningsCard: {
-    marginHorizontal: 24,
-    marginBottom: 16,
-    elevation: 2,
-  },
-  cardTitle: {
-    fontWeight: '600',
-    color: '#333333',
-    marginBottom: 8,
-  },
-  earningsAmount: {
-    color: '#2196F3',
-    fontWeight: 'bold',
-  },
-  performanceCard: {
-    marginHorizontal: 24,
-    marginBottom: 16,
-    elevation: 2,
-  },
-  metricRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 16,
-  },
-  metric: {
+  statGradient: {
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    ...shadows.md,
     alignItems: 'center',
   },
-  metricLabel: {
-    color: '#666666',
-    marginBottom: 4,
+  statIconContainer: {
+    marginBottom: spacing.sm,
+  },
+  statNumber: {
+    fontWeight: '800',
+    color: colors.white,
+    marginBottom: spacing.xs,
+  },
+  statLabel: {
+    color: colors.white,
+    opacity: 0.95,
+    textAlign: 'center',
+  },
+  earningsCard: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  earningsGradient: {
+    borderRadius: borderRadius.lg,
+    ...shadows.md,
+    overflow: 'hidden',
+  },
+  earningsContent: {
+    flexDirection: 'row',
+    padding: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  earningsLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  earningsIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  earningsInfo: {
+    flex: 1,
+  },
+  earningsLabel: {
+    color: colors.gray[600],
+    marginBottom: spacing.xs,
+  },
+  earningsAmount: {
+    color: colors.primary,
+    fontWeight: '800',
+  },
+  performanceCard: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  performanceGradient: {
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    ...shadows.md,
+  },
+  cardTitle: {
+    fontWeight: '700',
+    color: colors.gray[900],
+    marginBottom: spacing.lg,
+    letterSpacing: -0.2,
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  metricItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  metricIconBg: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
   },
   metricValue: {
-    fontWeight: 'bold',
-    color: '#333333',
+    fontWeight: '800',
+    color: colors.gray[900],
+    marginBottom: spacing.xs,
+  },
+  metricLabel: {
+    color: colors.gray[600],
+    textAlign: 'center',
   },
   section: {
-    marginTop: 8,
-    marginBottom: 16,
+    marginBottom: spacing.xl,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    marginBottom: 12,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
+    fontWeight: '700',
+    color: colors.gray[900],
+    letterSpacing: -0.2,
+  },
+  viewAllLink: {
+    color: colors.primary,
     fontWeight: '600',
-    color: '#333333',
-    paddingHorizontal: 24,
-    marginBottom: 12,
+    fontSize: 14,
   },
   jobCard: {
-    marginHorizontal: 24,
-    marginBottom: 12,
-    elevation: 2,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  jobCardGradient: {
+    borderRadius: borderRadius.lg,
+    ...shadows.md,
+    overflow: 'hidden',
+  },
+  jobCardContent: {
+    flexDirection: 'row',
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  jobIconGradient: {
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  jobInfo: {
+    flex: 1,
   },
   jobHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
+  },
+  jobNumber: {
+    fontWeight: '700',
+    color: colors.gray[900],
+  },
+  statusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'capitalize',
+  },
+  jobDetails: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  jobDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   jobTime: {
-    color: '#666666',
-    marginBottom: 8,
-  },
-  jobFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    color: colors.gray[600],
   },
   jobAddress: {
-    color: '#666666',
+    color: colors.gray[600],
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.lg,
   },
   emptyText: {
+    color: colors.gray[600],
+    marginTop: spacing.md,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  emptySubtext: {
+    color: colors.gray[500],
+    marginTop: spacing.xs,
+    fontSize: 14,
     textAlign: 'center',
-    color: '#999999',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
   },
-  quickActions: {
+  quickActionsGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 24,
-    gap: 12,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
   },
-  actionButton: {
+  actionCard: {
     flex: 1,
-    minWidth: '45%',
+  },
+  actionGradient: {
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    alignItems: 'center',
+    ...shadows.md,
+  },
+  actionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  actionLabel: {
+    color: colors.gray[700],
+    fontWeight: '600',
+    textAlign: 'center',
+    fontSize: 12,
   },
 });

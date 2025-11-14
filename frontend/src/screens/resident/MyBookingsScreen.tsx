@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
-import { Text, Card, Chip, SegmentedButtons, ActivityIndicator, FAB } from 'react-native-paper';
+import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
+import { Text, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
 import { bookingApi } from '../../services/api';
 import { Booking } from '../../types';
+import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
 type MyBookingsScreenNavigationProp = NativeStackNavigationProp<ResidentStackParamList>;
 
@@ -17,6 +20,13 @@ export const MyBookingsScreen = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const statusFilters = [
+    { value: 'all', label: 'All', icon: 'format-list-bulleted' },
+    { value: 'pending', label: 'Pending', icon: 'clock-outline' },
+    { value: 'confirmed', label: 'Confirmed', icon: 'check-circle-outline' },
+    { value: 'completed', label: 'Completed', icon: 'check-all' },
+  ];
 
   useEffect(() => {
     loadBookings();
@@ -57,262 +67,418 @@ export const MyBookingsScreen = () => {
   };
 
   const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: '#FF9800',
-      confirmed: '#2196F3',
-      'in-progress': '#9C27B0',
-      completed: '#4CAF50',
-      cancelled: '#F44336',
+    const statusColors: Record<string, string> = {
+      pending: colors.warning,
+      confirmed: colors.info,
+      'in-progress': colors.secondary,
+      completed: colors.success,
+      cancelled: colors.error,
     };
-    return colors[status] || '#757575';
+    return statusColors[status] || colors.gray[500];
   };
 
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      pending: 'Pending',
-      confirmed: 'Confirmed',
-      'in-progress': 'In Progress',
-      completed: 'Completed',
-      cancelled: 'Cancelled',
+  const getStatusIcon = (status: string) => {
+    const statusIcons: Record<string, string> = {
+      pending: 'clock-outline',
+      confirmed: 'check-circle-outline',
+      'in-progress': 'progress-clock',
+      completed: 'check-all',
+      cancelled: 'close-circle-outline',
     };
-    return labels[status] || status;
+    return statusIcons[status] || 'information-outline';
   };
 
   const renderBookingCard = ({ item }: { item: Booking }) => (
-    <Card
+    <TouchableOpacity
       style={styles.bookingCard}
       onPress={() => navigation.navigate('BookingDetail', { bookingId: item._id })}
     >
-      <Card.Content>
-        <View style={styles.cardHeader}>
-          <View style={styles.headerLeft}>
-            <Text variant="labelSmall" style={styles.bookingNumber}>
-              #{item.bookingNumber}
-            </Text>
-            <Text variant="titleMedium" style={styles.serviceName}>
+      <LinearGradient
+        colors={[colors.white, colors.gray[50]]}
+        style={styles.bookingCardGradient}
+      >
+        <View style={styles.bookingCardContent}>
+          <View style={styles.bookingIconContainer}>
+            <LinearGradient
+              colors={[getStatusColor(item.status), getStatusColor(item.status) + 'CC']}
+              style={styles.bookingIconGradient}
+            >
+              <MaterialCommunityIcons
+                name={getStatusIcon(item.status) as any}
+                size={24}
+                color={colors.white}
+              />
+            </LinearGradient>
+          </View>
+
+          <View style={styles.bookingInfo}>
+            <View style={styles.bookingHeader}>
+              <Text variant="titleMedium" style={styles.bookingNumber}>
+                #{item.bookingNumber}
+              </Text>
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: getStatusColor(item.status) + '20' },
+                ]}
+              >
+                <Text
+                  style={[styles.statusText, { color: getStatusColor(item.status) }]}
+                >
+                  {item.status}
+                </Text>
+              </View>
+            </View>
+
+            <Text variant="bodyMedium" style={styles.serviceName} numberOfLines={1}>
               {item.service?.name || 'Service'}
             </Text>
-          </View>
-          <Chip
-            mode="flat"
-            style={{ backgroundColor: getStatusColor(item.status) + '20' }}
-            textStyle={{ color: getStatusColor(item.status), fontWeight: '600' }}
-          >
-            {getStatusLabel(item.status)}
-          </Chip>
-        </View>
 
-        <View style={styles.infoRow}>
-          <Text style={styles.icon}>📅</Text>
-          <Text variant="bodyMedium" style={styles.infoText}>
-            {new Date(item.scheduledDate).toLocaleDateString('en-IN', {
-              weekday: 'short',
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })}
-          </Text>
-        </View>
+            <View style={styles.bookingDetails}>
+              <View style={styles.bookingDetailItem}>
+                <MaterialCommunityIcons
+                  name="calendar"
+                  size={14}
+                  color={colors.gray[600]}
+                />
+                <Text variant="bodySmall" style={styles.bookingDate}>
+                  {new Date(item.scheduledDate).toLocaleDateString('en-IN', {
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </Text>
+              </View>
 
-        {item.scheduledTime && (
-          <View style={styles.infoRow}>
-            <Text style={styles.icon}>🕐</Text>
-            <Text variant="bodyMedium" style={styles.infoText}>
-              {item.scheduledTime}
-            </Text>
-          </View>
-        )}
+              {item.scheduledTime && (
+                <View style={styles.bookingDetailItem}>
+                  <MaterialCommunityIcons
+                    name="clock-outline"
+                    size={14}
+                    color={colors.gray[600]}
+                  />
+                  <Text variant="bodySmall" style={styles.bookingDate}>
+                    {item.scheduledTime}
+                  </Text>
+                </View>
+              )}
 
-        {item.address && (
-          <View style={styles.infoRow}>
-            <Text style={styles.icon}>📍</Text>
-            <Text variant="bodyMedium" style={styles.infoText} numberOfLines={1}>
-              {item.address.flatNumber}, {item.address.building}, {item.address.area}
-            </Text>
-          </View>
-        )}
+              <View style={styles.bookingDetailItem}>
+                <MaterialCommunityIcons
+                  name="currency-inr"
+                  size={14}
+                  color={colors.primary}
+                />
+                <Text variant="titleSmall" style={styles.bookingAmount}>
+                  {item.totalAmount}
+                </Text>
+              </View>
+            </View>
 
-        <View style={styles.cardFooter}>
-          <View>
-            {item.sevak && (
-              <Text variant="bodySmall" style={styles.sevakLabel}>
-                Assigned to: {item.sevak.fullName}
-              </Text>
+            {item.address && (
+              <View style={styles.addressRow}>
+                <MaterialCommunityIcons
+                  name="map-marker"
+                  size={14}
+                  color={colors.gray[500]}
+                />
+                <Text variant="bodySmall" style={styles.addressText} numberOfLines={1}>
+                  {item.address.flatNumber}, {item.address.building}, {item.address.area}
+                </Text>
+              </View>
             )}
           </View>
-          <Text variant="titleMedium" style={styles.amount}>
-            ₹{item.totalAmount}
-          </Text>
+
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={24}
+            color={colors.gray[400]}
+          />
         </View>
-      </Card.Content>
-    </Card>
+      </LinearGradient>
+    </TouchableOpacity>
   );
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2196F3" />
-      </View>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium]}
+        style={styles.centered}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Loading bookings...</Text>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text variant="headlineMedium" style={styles.title}>
-          My Bookings
-        </Text>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium, colors.backgroundLight]}
+        style={styles.gradient}
+        locations={[0, 0.3, 1]}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.header}>
+            <Text variant="headlineMedium" style={styles.title}>
+              My Bookings
+            </Text>
 
-        <SegmentedButtons
-          value={selectedStatus}
-          onValueChange={setSelectedStatus}
-          buttons={[
-            { value: 'all', label: 'All' },
-            { value: 'pending', label: 'Pending' },
-            { value: 'confirmed', label: 'Confirmed' },
-            { value: 'completed', label: 'Completed' },
-          ]}
-          style={styles.segmentedButtons}
-        />
-      </View>
-
-      <FlatList
-        data={filteredBookings}
-        renderItem={renderBookingCard}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text variant="displaySmall" style={styles.emptyIcon}>
-              📋
-            </Text>
-            <Text variant="titleLarge" style={styles.emptyText}>
-              No bookings found
-            </Text>
-            <Text variant="bodyMedium" style={styles.emptySubtext}>
-              {selectedStatus === 'all'
-                ? "You haven't made any bookings yet"
-                : `No ${getStatusLabel(selectedStatus).toLowerCase()} bookings`}
-            </Text>
+            {/* Status Filter Pills */}
+            <View style={styles.filtersContainer}>
+              {statusFilters.map((filter) => (
+                <TouchableOpacity
+                  key={filter.value}
+                  onPress={() => setSelectedStatus(filter.value)}
+                >
+                  <LinearGradient
+                    colors={
+                      selectedStatus === filter.value
+                        ? [colors.primary, colors.primaryDark]
+                        : [colors.white, colors.gray[100]]
+                    }
+                    style={styles.filterPill}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <MaterialCommunityIcons
+                      name={filter.icon as any}
+                      size={16}
+                      color={selectedStatus === filter.value ? colors.white : colors.gray[600]}
+                    />
+                    <Text
+                      style={[
+                        styles.filterText,
+                        selectedStatus === filter.value && styles.filterTextSelected,
+                      ]}
+                    >
+                      {filter.label}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-        }
-      />
 
-      <FAB
-        icon="plus"
-        label="New Booking"
-        style={styles.fab}
-        onPress={() => {
-          // Navigate to services screen to book
-          navigation.navigate('ResidentTabs', { screen: 'Services' } as any);
-        }}
-      />
-    </SafeAreaView>
+          <FlatList
+            data={filteredBookings}
+            renderItem={renderBookingCard}
+            keyExtractor={(item) => item._id}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <MaterialCommunityIcons
+                  name="calendar-blank"
+                  size={64}
+                  color={colors.gray[400]}
+                />
+                <Text variant="titleLarge" style={styles.emptyText}>
+                  No bookings found
+                </Text>
+                <Text variant="bodyMedium" style={styles.emptySubtext}>
+                  {selectedStatus === 'all'
+                    ? "You haven't made any bookings yet"
+                    : `No ${selectedStatus} bookings`}
+                </Text>
+              </View>
+            }
+          />
+
+          {/* FAB */}
+          <TouchableOpacity
+            style={styles.fab}
+            onPress={() => {
+              navigation.navigate('ResidentTabs', { screen: 'Services' } as any);
+            }}
+          >
+            <LinearGradient
+              colors={[colors.primary, colors.primaryDark]}
+              style={styles.fabGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <MaterialCommunityIcons name="plus" size={24} color={colors.white} />
+              <Text style={styles.fabLabel}>New Booking</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: spacing.md,
+    color: colors.gray[300],
+    fontSize: 16,
+  },
   header: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    elevation: 2,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   title: {
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 16,
+    fontWeight: '800',
+    color: colors.white,
+    marginBottom: spacing.lg,
+    letterSpacing: -0.5,
   },
-  segmentedButtons: {
-    marginBottom: 8,
+  filtersContainer: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  filterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    gap: spacing.xs,
+    ...shadows.sm,
+  },
+  filterText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.gray[700],
+  },
+  filterTextSelected: {
+    color: colors.white,
   },
   listContent: {
-    padding: 16,
+    padding: spacing.lg,
     paddingBottom: 100,
   },
   bookingCard: {
-    marginBottom: 16,
-    elevation: 2,
+    marginBottom: spacing.md,
   },
-  cardHeader: {
+  bookingCardGradient: {
+    borderRadius: borderRadius.lg,
+    ...shadows.md,
+    overflow: 'hidden',
+  },
+  bookingCardContent: {
+    flexDirection: 'row',
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  bookingIconContainer: {
+    marginRight: spacing.md,
+  },
+  bookingIconGradient: {
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bookingInfo: {
+    flex: 1,
+  },
+  bookingHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  headerLeft: {
-    flex: 1,
-    marginRight: 12,
+    alignItems: 'center',
+    marginBottom: spacing.xs,
   },
   bookingNumber: {
-    color: '#999999',
-    marginBottom: 4,
+    fontWeight: '700',
+    color: colors.gray[900],
+  },
+  statusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'capitalize',
   },
   serviceName: {
-    fontWeight: '600',
-    color: '#333333',
+    color: colors.gray[700],
+    marginBottom: spacing.sm,
   },
-  infoRow: {
+  bookingDetails: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  bookingDetailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    gap: 4,
   },
-  icon: {
-    fontSize: 16,
-    marginRight: 8,
-    width: 20,
+  bookingDate: {
+    color: colors.gray[600],
   },
-  infoText: {
+  bookingAmount: {
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  addressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  addressText: {
     flex: 1,
-    color: '#666666',
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-  },
-  sevakLabel: {
-    color: '#666666',
-  },
-  amount: {
-    color: '#2196F3',
-    fontWeight: 'bold',
+    color: colors.gray[500],
+    fontSize: 12,
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: 64,
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16,
+    paddingVertical: spacing.xxl * 2,
+    paddingHorizontal: spacing.lg,
   },
   emptyText: {
-    color: '#666666',
-    marginBottom: 8,
+    color: colors.gray[600],
+    marginTop: spacing.md,
     fontWeight: '600',
   },
   emptySubtext: {
-    color: '#999999',
+    color: colors.gray[500],
+    marginTop: spacing.xs,
     textAlign: 'center',
   },
   fab: {
     position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#2196F3',
+    right: spacing.lg,
+    bottom: spacing.lg,
+  },
+  fabGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.lg,
+    gap: spacing.sm,
+    ...shadows.lg,
+  },
+  fabLabel: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 16,
   },
 });

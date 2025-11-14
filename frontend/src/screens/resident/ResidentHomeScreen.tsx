@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Text, Searchbar, Card, Button, FAB, Chip, ActivityIndicator } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+import { Text, Searchbar, Card, Button, FAB, Chip, ActivityIndicator, Avatar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
 import { serviceApi, bookingApi } from '../../services/api';
 import { Service, Booking } from '../../types';
+import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
 type ResidentHomeScreenNavigationProp = NativeStackNavigationProp<ResidentStackParamList>;
 
@@ -21,12 +24,12 @@ export const ResidentHomeScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const categories = [
-    { name: 'Cleaning', icon: 'broom', color: '#4CAF50' },
-    { name: 'Plumbing', icon: 'pipe', color: '#2196F3' },
-    { name: 'Electrical', icon: 'lightning-bolt', color: '#FF9800' },
-    { name: 'Gardening', icon: 'flower', color: '#8BC34A' },
-    { name: 'Painting', icon: 'format-paint', color: '#9C27B0' },
-    { name: 'Carpentry', icon: 'hammer', color: '#795548' },
+    { name: 'Cleaning', icon: 'broom', gradient: [colors.primary, colors.primaryDark] },
+    { name: 'Plumbing', icon: 'pipe-wrench', gradient: [colors.info, '#1e40af'] },
+    { name: 'Electrical', icon: 'lightning-bolt', gradient: [colors.warning, '#c2410c'] },
+    { name: 'Gardening', icon: 'flower', gradient: [colors.success, '#047857'] },
+    { name: 'Painting', icon: 'format-paint', gradient: [colors.secondary, colors.secondaryDark] },
+    { name: 'Carpentry', icon: 'hammer-wrench', gradient: [colors.accent, colors.accentDark] },
   ];
 
   useEffect(() => {
@@ -36,7 +39,6 @@ export const ResidentHomeScreen = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      // Load featured services and recent bookings in parallel
       const [servicesResponse, bookingsResponse] = await Promise.all([
         serviceApi.getServices({ limit: 5 }),
         bookingApi.getMyBookings({ limit: 3 }),
@@ -63,278 +65,625 @@ export const ResidentHomeScreen = () => {
   };
 
   const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: '#FF9800',
-      confirmed: '#2196F3',
-      'in-progress': '#9C27B0',
-      completed: '#4CAF50',
-      cancelled: '#F44336',
+    const statusColors: Record<string, string> = {
+      pending: colors.warning,
+      confirmed: colors.info,
+      'in-progress': colors.secondary,
+      completed: colors.success,
+      cancelled: colors.error,
     };
-    return colors[status] || '#757575';
+    return statusColors[status] || colors.gray[500];
+  };
+
+  const getStatusIcon = (status: string) => {
+    const statusIcons: Record<string, string> = {
+      pending: 'clock-outline',
+      confirmed: 'check-circle-outline',
+      'in-progress': 'progress-clock',
+      completed: 'check-all',
+      cancelled: 'close-circle-outline',
+    };
+    return statusIcons[status] || 'information-outline';
   };
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2196F3" />
-      </View>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium]}
+        style={styles.centered}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium, colors.backgroundLight]}
+        style={styles.gradient}
+        locations={[0, 0.3, 1]}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text variant="headlineMedium" style={styles.greeting}>
-            Welcome back,
-          </Text>
-          <Text variant="titleLarge" style={styles.userName}>
-            {user?.fullName || 'User'}
-          </Text>
-        </View>
-
-        {/* Search Bar */}
-        <Searchbar
-          placeholder="Search services..."
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={styles.searchBar}
-        />
-
-        {/* Categories */}
-        <View style={styles.section}>
-          <Text variant="titleLarge" style={styles.sectionTitle}>
-            Categories
-          </Text>
+        <SafeAreaView style={styles.safeArea}>
           <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesContainer}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+              />
+            }
           >
-            {categories.map((category, index) => (
-              <Chip
-                key={index}
-                mode="flat"
-                style={[styles.categoryChip, { backgroundColor: category.color + '20' }]}
-                textStyle={{ color: category.color }}
-                onPress={() => {
-                  // Navigate to services screen with category filter
-                }}
-              >
-                {category.name}
-              </Chip>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Featured Services */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text variant="titleLarge" style={styles.sectionTitle}>
-              Featured Services
-            </Text>
-            <Button mode="text" compact onPress={() => {}}>
-              View All
-            </Button>
-          </View>
-
-          {featuredServices.length > 0 ? (
-            featuredServices.map((service) => (
-              <Card key={service._id} style={styles.serviceCard}>
-                <Card.Content>
-                  <Text variant="titleMedium">{service.name}</Text>
-                  <Text variant="bodyMedium" style={styles.serviceDescription}>
-                    {service.description}
+            {/* Modern Header */}
+            <View style={styles.header}>
+              <View style={styles.headerContent}>
+                <View>
+                  <Text variant="bodyMedium" style={styles.greeting}>
+                    Welcome back,
                   </Text>
-                  <View style={styles.serviceFooter}>
-                    <Text variant="titleSmall" style={styles.price}>
-                      ₹{service.basePrice}
-                    </Text>
-                    {service.averageRating && (
-                      <Text variant="bodySmall" style={styles.rating}>
-                        ⭐ {service.averageRating.toFixed(1)}
-                      </Text>
-                    )}
-                  </View>
-                </Card.Content>
-                <Card.Actions>
-                  <Button
-                    mode="contained"
-                    onPress={() => {
-                      // Navigate to service detail
-                    }}
+                  <Text variant="headlineMedium" style={styles.userName}>
+                    {user?.fullName || 'User'}
+                  </Text>
+                </View>
+                <TouchableOpacity>
+                  <LinearGradient
+                    colors={[colors.primary, colors.primaryDark]}
+                    style={styles.avatarGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                   >
-                    Book Now
-                  </Button>
-                </Card.Actions>
-              </Card>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>No services available</Text>
-          )}
-        </View>
+                    <MaterialCommunityIcons
+                      name="account"
+                      size={28}
+                      color={colors.white}
+                    />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
 
-        {/* Recent Bookings */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text variant="titleLarge" style={styles.sectionTitle}>
-              Recent Bookings
-            </Text>
-            <Button mode="text" compact onPress={() => {}}>
-              View All
-            </Button>
-          </View>
+              {/* Modern Search Bar */}
+              <View style={styles.searchContainer}>
+                <Searchbar
+                  placeholder="Search for services..."
+                  onChangeText={setSearchQuery}
+                  value={searchQuery}
+                  style={styles.searchBar}
+                  inputStyle={styles.searchInput}
+                  iconColor={colors.primary}
+                  placeholderTextColor={colors.gray[500]}
+                  elevation={0}
+                />
+              </View>
+            </View>
 
-          {recentBookings.length > 0 ? (
-            recentBookings.map((booking) => (
-              <Card key={booking._id} style={styles.bookingCard}>
-                <Card.Content>
-                  <View style={styles.bookingHeader}>
-                    <Text variant="titleMedium">Booking #{booking.bookingNumber}</Text>
-                    <Chip
-                      mode="flat"
-                      style={{ backgroundColor: getStatusColor(booking.status) + '20' }}
-                      textStyle={{ color: getStatusColor(booking.status) }}
+            {/* Categories Section */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text variant="titleLarge" style={styles.sectionTitle}>
+                  Categories
+                </Text>
+                <TouchableOpacity>
+                  <Text style={styles.viewAllLink}>View All</Text>
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.categoriesContainer}
+              >
+                {categories.map((category, index) => (
+                  <TouchableOpacity key={index} style={styles.categoryCard}>
+                    <LinearGradient
+                      colors={category.gradient}
+                      style={styles.categoryGradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
                     >
-                      {booking.status}
-                    </Chip>
-                  </View>
-                  <Text variant="bodyMedium" style={styles.bookingDate}>
-                    {new Date(booking.scheduledDate).toLocaleDateString()}
-                  </Text>
-                  <Text variant="titleSmall" style={styles.bookingAmount}>
-                    ₹{booking.totalAmount}
-                  </Text>
-                </Card.Content>
-              </Card>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>No bookings yet</Text>
-          )}
-        </View>
-      </ScrollView>
+                      <MaterialCommunityIcons
+                        name={category.icon as any}
+                        size={28}
+                        color={colors.white}
+                      />
+                    </LinearGradient>
+                    <Text variant="bodyMedium" style={styles.categoryName}>
+                      {category.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
 
-      {/* FAB for quick booking */}
-      <FAB
-        icon="plus"
-        style={styles.fab}
-        onPress={() => {
-          // Navigate to services screen
-        }}
-        label="New Booking"
-      />
-    </SafeAreaView>
+            {/* Featured Services */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text variant="titleLarge" style={styles.sectionTitle}>
+                  Featured Services
+                </Text>
+                <TouchableOpacity>
+                  <Text style={styles.viewAllLink}>View All</Text>
+                </TouchableOpacity>
+              </View>
+
+              {featuredServices.length > 0 ? (
+                featuredServices.map((service) => (
+                  <TouchableOpacity key={service._id} style={styles.serviceCard}>
+                    <LinearGradient
+                      colors={[colors.white, colors.gray[50]]}
+                      style={styles.serviceCardGradient}
+                    >
+                      <View style={styles.serviceCardContent}>
+                        <LinearGradient
+                          colors={[colors.primary, colors.primaryDark]}
+                          style={styles.serviceIcon}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <MaterialCommunityIcons
+                            name="room-service-outline"
+                            size={24}
+                            color={colors.white}
+                          />
+                        </LinearGradient>
+                        <View style={styles.serviceInfo}>
+                          <Text variant="titleMedium" style={styles.serviceName}>
+                            {service.name}
+                          </Text>
+                          <Text
+                            variant="bodySmall"
+                            style={styles.serviceDescription}
+                            numberOfLines={2}
+                          >
+                            {service.description}
+                          </Text>
+                          <View style={styles.serviceFooter}>
+                            <View style={styles.priceContainer}>
+                              <Text style={styles.priceLabel}>Starting at</Text>
+                              <Text variant="titleMedium" style={styles.price}>
+                                ₹{service.basePrice}
+                              </Text>
+                            </View>
+                            {service.averageRating && (
+                              <View style={styles.ratingContainer}>
+                                <MaterialCommunityIcons
+                                  name="star"
+                                  size={16}
+                                  color={colors.warning}
+                                />
+                                <Text variant="bodySmall" style={styles.rating}>
+                                  {service.averageRating.toFixed(1)}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                        <TouchableOpacity
+                          style={styles.bookButton}
+                          onPress={() => {
+                            // Navigate to service detail
+                          }}
+                        >
+                          <LinearGradient
+                            colors={[colors.primary, colors.primaryDark]}
+                            style={styles.bookButtonGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                          >
+                            <MaterialCommunityIcons
+                              name="arrow-right"
+                              size={20}
+                              color={colors.white}
+                            />
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      </View>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <MaterialCommunityIcons
+                    name="package-variant"
+                    size={48}
+                    color={colors.gray[400]}
+                  />
+                  <Text style={styles.emptyText}>No services available</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Recent Bookings */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text variant="titleLarge" style={styles.sectionTitle}>
+                  Recent Bookings
+                </Text>
+                <TouchableOpacity>
+                  <Text style={styles.viewAllLink}>View All</Text>
+                </TouchableOpacity>
+              </View>
+
+              {recentBookings.length > 0 ? (
+                recentBookings.map((booking) => (
+                  <TouchableOpacity key={booking._id} style={styles.bookingCard}>
+                    <LinearGradient
+                      colors={[colors.white, colors.gray[50]]}
+                      style={styles.bookingCardGradient}
+                    >
+                      <View style={styles.bookingCardContent}>
+                        <View style={styles.bookingIconContainer}>
+                          <LinearGradient
+                            colors={[getStatusColor(booking.status), getStatusColor(booking.status) + 'CC']}
+                            style={styles.bookingIconGradient}
+                          >
+                            <MaterialCommunityIcons
+                              name={getStatusIcon(booking.status) as any}
+                              size={24}
+                              color={colors.white}
+                            />
+                          </LinearGradient>
+                        </View>
+                        <View style={styles.bookingInfo}>
+                          <View style={styles.bookingHeader}>
+                            <Text variant="titleMedium" style={styles.bookingNumber}>
+                              #{booking.bookingNumber}
+                            </Text>
+                            <View
+                              style={[
+                                styles.statusBadge,
+                                { backgroundColor: getStatusColor(booking.status) + '20' },
+                              ]}
+                            >
+                              <Text
+                                style={[styles.statusText, { color: getStatusColor(booking.status) }]}
+                              >
+                                {booking.status}
+                              </Text>
+                            </View>
+                          </View>
+                          <View style={styles.bookingDetails}>
+                            <View style={styles.bookingDetailItem}>
+                              <MaterialCommunityIcons
+                                name="calendar"
+                                size={14}
+                                color={colors.gray[600]}
+                              />
+                              <Text variant="bodySmall" style={styles.bookingDate}>
+                                {new Date(booking.scheduledDate).toLocaleDateString()}
+                              </Text>
+                            </View>
+                            <View style={styles.bookingDetailItem}>
+                              <MaterialCommunityIcons
+                                name="currency-inr"
+                                size={14}
+                                color={colors.primary}
+                              />
+                              <Text variant="titleSmall" style={styles.bookingAmount}>
+                                {booking.totalAmount}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <MaterialCommunityIcons
+                    name="calendar-blank"
+                    size={48}
+                    color={colors.gray[400]}
+                  />
+                  <Text style={styles.emptyText}>No bookings yet</Text>
+                  <Text style={styles.emptySubtext}>Start booking services to see them here</Text>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+
+          {/* Modern FAB */}
+          <LinearGradient
+            colors={[colors.primary, colors.primaryDark]}
+            style={styles.fab}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <TouchableOpacity
+              style={styles.fabTouchable}
+              onPress={() => {
+                // Navigate to services screen
+              }}
+            >
+              <MaterialCommunityIcons name="plus" size={24} color={colors.white} />
+              <Text style={styles.fabLabel}>New Booking</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: spacing.md,
+    color: colors.gray[300],
+    fontSize: 16,
+  },
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   header: {
-    padding: 24,
-    paddingBottom: 16,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
   },
   greeting: {
-    color: '#666666',
+    color: colors.gray[400],
+    marginBottom: spacing.xs,
   },
   userName: {
-    fontWeight: 'bold',
-    color: '#333333',
+    fontWeight: '800',
+    color: colors.white,
+    letterSpacing: -0.5,
+  },
+  avatarGradient: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.md,
+  },
+  searchContainer: {
+    marginTop: spacing.md,
   },
   searchBar: {
-    marginHorizontal: 24,
-    marginBottom: 16,
-    elevation: 2,
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    ...shadows.md,
+  },
+  searchInput: {
+    color: colors.gray[900],
   },
   section: {
-    marginBottom: 24,
+    marginBottom: spacing.xl,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    marginBottom: 12,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
+    fontWeight: '700',
+    color: colors.gray[900],
+    letterSpacing: -0.2,
+  },
+  viewAllLink: {
+    color: colors.primary,
     fontWeight: '600',
-    color: '#333333',
+    fontSize: 14,
   },
   categoriesContainer: {
-    paddingHorizontal: 24,
-    gap: 8,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
   },
-  categoryChip: {
-    marginRight: 8,
+  categoryCard: {
+    alignItems: 'center',
+    marginRight: spacing.sm,
+  },
+  categoryGradient: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+    ...shadows.md,
+  },
+  categoryName: {
+    color: colors.gray[700],
+    fontWeight: '600',
+    fontSize: 12,
   },
   serviceCard: {
-    marginHorizontal: 24,
-    marginBottom: 12,
-    elevation: 2,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  serviceCardGradient: {
+    borderRadius: borderRadius.lg,
+    ...shadows.md,
+    overflow: 'hidden',
+  },
+  serviceCardContent: {
+    flexDirection: 'row',
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  serviceIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  serviceInfo: {
+    flex: 1,
+  },
+  serviceName: {
+    fontWeight: '700',
+    color: colors.gray[900],
+    marginBottom: spacing.xs,
   },
   serviceDescription: {
-    color: '#666666',
-    marginTop: 4,
-    marginBottom: 12,
+    color: colors.gray[600],
+    marginBottom: spacing.sm,
   },
   serviceFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  priceContainer: {
+    flexDirection: 'column',
+  },
+  priceLabel: {
+    fontSize: 10,
+    color: colors.gray[500],
+    marginBottom: 2,
+  },
   price: {
-    color: '#2196F3',
-    fontWeight: 'bold',
+    color: colors.primary,
+    fontWeight: '800',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.gray[100],
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
   },
   rating: {
-    color: '#666666',
+    color: colors.gray[700],
+    marginLeft: 4,
+    fontWeight: '600',
+  },
+  bookButton: {
+    marginLeft: spacing.sm,
+  },
+  bookButtonGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   bookingCard: {
-    marginHorizontal: 24,
-    marginBottom: 12,
-    elevation: 2,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  bookingCardGradient: {
+    borderRadius: borderRadius.lg,
+    ...shadows.md,
+    overflow: 'hidden',
+  },
+  bookingCardContent: {
+    flexDirection: 'row',
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  bookingIconContainer: {
+    marginRight: spacing.md,
+  },
+  bookingIconGradient: {
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bookingInfo: {
+    flex: 1,
   },
   bookingHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
+  },
+  bookingNumber: {
+    fontWeight: '700',
+    color: colors.gray[900],
+  },
+  statusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'capitalize',
+  },
+  bookingDetails: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  bookingDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   bookingDate: {
-    color: '#666666',
-    marginBottom: 4,
+    color: colors.gray[600],
   },
   bookingAmount: {
-    color: '#2196F3',
-    fontWeight: '600',
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.lg,
   },
   emptyText: {
+    color: colors.gray[600],
+    marginTop: spacing.md,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  emptySubtext: {
+    color: colors.gray[500],
+    marginTop: spacing.xs,
+    fontSize: 14,
     textAlign: 'center',
-    color: '#999999',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
   },
   fab: {
     position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#2196F3',
+    right: spacing.lg,
+    bottom: spacing.lg,
+    borderRadius: borderRadius.lg,
+    ...shadows.lg,
+  },
+  fabTouchable: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+  },
+  fabLabel: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 16,
   },
 });

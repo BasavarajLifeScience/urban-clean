@@ -1,15 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, TextInput as RNTextInput, Alert } from 'react-native';
+import { View, StyleSheet, TextInput as RNTextInput, Alert, TouchableOpacity } from 'react-native';
 import { Text, Button, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import { RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { AuthStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
+import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
 type OTPVerificationScreenRouteProp = RouteProp<AuthStackParamList, 'OTPVerification'>;
+type OTPVerificationScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'OTPVerification'>;
 
 export const OTPVerificationScreen = () => {
   const route = useRoute<OTPVerificationScreenRouteProp>();
+  const navigation = useNavigation<OTPVerificationScreenNavigationProp>();
   const { verifyOTP } = useAuth();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -111,126 +118,204 @@ export const OTPVerificationScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text variant="displaySmall" style={styles.title}>
-            Verify OTP
-          </Text>
-          <Text variant="bodyLarge" style={styles.subtitle}>
-            Enter the 6-digit code sent to
-          </Text>
-          <Text variant="titleMedium" style={styles.contact}>
-            {phoneNumber || email}
-          </Text>
-        </View>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium, colors.backgroundMedium]}
+        style={styles.gradient}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.content}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <MaterialCommunityIcons name="arrow-left" size={24} color={colors.white} />
+            </TouchableOpacity>
 
-        <View style={styles.otpContainer}>
-          {otp.map((digit, index) => (
-            <RNTextInput
-              key={index}
-              ref={(ref) => (inputRefs.current[index] = ref)}
-              style={[
-                styles.otpInput,
-                digit ? styles.otpInputFilled : null,
-              ]}
-              value={digit}
-              onChangeText={(text) => handleOtpChange(text, index)}
-              onKeyPress={(e) => handleKeyPress(e, index)}
-              keyboardType="number-pad"
-              maxLength={1}
-              selectTextOnFocus
-              editable={!loading}
-            />
-          ))}
-        </View>
+            <View style={styles.header}>
+              <View style={styles.iconContainer}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primaryDark]}
+                  style={styles.iconGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <MaterialCommunityIcons name="shield-check" size={32} color={colors.white} />
+                </LinearGradient>
+              </View>
+              <Text variant="displaySmall" style={styles.title}>
+                Verify OTP
+              </Text>
+              <Text variant="bodyLarge" style={styles.subtitle}>
+                Enter the 6-digit code sent to
+              </Text>
+              <Text variant="titleMedium" style={styles.contact}>
+                {phoneNumber || email}
+              </Text>
+            </View>
 
-        <Button
-          mode="contained"
-          onPress={handleVerify}
-          style={styles.verifyButton}
-          contentStyle={styles.buttonContent}
-          disabled={loading || otp.some((digit) => !digit)}
-        >
-          {loading ? <ActivityIndicator color="#FFFFFF" /> : 'Verify'}
-        </Button>
+            <View style={styles.formCard}>
+              <View style={styles.otpContainer}>
+                {otp.map((digit, index) => (
+                  <RNTextInput
+                    key={index}
+                    ref={(ref) => (inputRefs.current[index] = ref)}
+                    style={[
+                      styles.otpInput,
+                      digit ? styles.otpInputFilled : null,
+                    ]}
+                    value={digit}
+                    onChangeText={(text) => handleOtpChange(text, index)}
+                    onKeyPress={(e) => handleKeyPress(e, index)}
+                    keyboardType="number-pad"
+                    maxLength={1}
+                    selectTextOnFocus
+                    editable={!loading}
+                  />
+                ))}
+              </View>
 
-        <View style={styles.resendContainer}>
-          {resendTimer > 0 ? (
-            <Text variant="bodyMedium" style={styles.timerText}>
-              Resend OTP in {resendTimer}s
-            </Text>
-          ) : (
-            <Button mode="text" onPress={handleResend} disabled={loading}>
-              Resend OTP
-            </Button>
-          )}
-        </View>
-      </View>
-    </SafeAreaView>
+              <LinearGradient
+                colors={[colors.primary, colors.primaryDark]}
+                style={styles.verifyButton}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Button
+                  mode="text"
+                  onPress={handleVerify}
+                  contentStyle={styles.buttonContent}
+                  labelStyle={styles.buttonLabel}
+                  disabled={loading || otp.some((digit) => !digit)}
+                >
+                  {loading ? <ActivityIndicator color={colors.white} /> : 'Verify OTP'}
+                </Button>
+              </LinearGradient>
+
+              <View style={styles.resendContainer}>
+                {resendTimer > 0 ? (
+                  <Text variant="bodyMedium" style={styles.timerText}>
+                    Resend OTP in {resendTimer}s
+                  </Text>
+                ) : (
+                  <TouchableOpacity onPress={handleResend} disabled={loading}>
+                    <Text style={styles.resendText}>Resend OTP</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
   },
   content: {
     flex: 1,
-    padding: 24,
+    padding: spacing.lg,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.gray[800],
     justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: spacing.xl,
+  },
+  iconContainer: {
+    marginBottom: spacing.md,
+  },
+  iconGradient: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.md,
   },
   title: {
-    fontWeight: 'bold',
-    color: '#2196F3',
-    marginBottom: 16,
+    fontWeight: '800',
+    color: colors.white,
+    marginBottom: spacing.xs,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    color: '#666666',
-    marginBottom: 8,
+    color: colors.gray[300],
+    marginBottom: spacing.xs,
     textAlign: 'center',
   },
   contact: {
-    color: '#333333',
-    fontWeight: '600',
+    color: colors.white,
+    fontWeight: '700',
+  },
+  formCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    ...shadows.xl,
   },
   otpContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 32,
-    paddingHorizontal: 16,
+    marginBottom: spacing.xl,
   },
   otpInput: {
     width: 48,
     height: 56,
     borderWidth: 2,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
+    borderColor: colors.gray[300],
+    borderRadius: borderRadius.md,
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#333333',
-    backgroundColor: '#F5F5F5',
+    color: colors.gray[900],
+    backgroundColor: colors.gray[50],
   },
   otpInputFilled: {
-    borderColor: '#2196F3',
-    backgroundColor: '#E3F2FD',
+    borderColor: colors.primary,
+    backgroundColor: colors.white,
+    ...shadows.sm,
   },
   verifyButton: {
-    marginBottom: 24,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    marginBottom: spacing.md,
+    ...shadows.md,
   },
   buttonContent: {
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
+  },
+  buttonLabel: {
+    color: colors.white,
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   resendContainer: {
     alignItems: 'center',
   },
   timerText: {
-    color: '#999999',
+    color: colors.gray[500],
+  },
+  resendText: {
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 14,
   },
 });

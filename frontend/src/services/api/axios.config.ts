@@ -1,8 +1,29 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-const API_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:5001/api/v1';
+// Determine API URL based on platform
+const getApiUrl = () => {
+  // Check if custom API URL is provided in app.json
+  if (Constants.expoConfig?.extra?.apiUrl) {
+    return Constants.expoConfig.extra.apiUrl;
+  }
+
+  // Default URLs based on platform
+  // Android emulator needs 10.0.2.2 to access host machine's localhost
+  // iOS simulator can use localhost
+  // Web uses localhost
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:5001/api/v1';
+  }
+
+  return 'http://localhost:5001/api/v1';
+};
+
+const API_URL = getApiUrl();
+
+console.log('🔗 API URL configured:', API_URL, '| Platform:', Platform.OS);
 
 console.log('🌐 [axios.config] Initializing axios with API_URL:', API_URL);
 console.log('🌐 [axios.config] Expo config apiUrl:', Constants.expoConfig?.extra?.apiUrl);
@@ -10,7 +31,7 @@ console.log('🌐 [axios.config] Expo config apiUrl:', Constants.expoConfig?.ext
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 10000,
+  timeout: 30000, // Increased timeout for mobile devices
   headers: {
     'Content-Type': 'application/json',
   },

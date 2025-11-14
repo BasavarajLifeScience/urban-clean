@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, Card, Chip, Button, Divider, ActivityIndicator } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { Text, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
 import { bookingApi } from '../../services/api';
 import { Booking } from '../../types';
+import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
 type BookingDetailScreenRouteProp = RouteProp<ResidentStackParamList, 'BookingDetail'>;
 type BookingDetailScreenNavigationProp = NativeStackNavigationProp<ResidentStackParamList, 'BookingDetail'>;
@@ -69,40 +72,48 @@ export const BookingDetailScreen = () => {
   };
 
   const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: '#FF9800',
-      confirmed: '#2196F3',
-      'in-progress': '#9C27B0',
-      completed: '#4CAF50',
-      cancelled: '#F44336',
+    const statusColors: Record<string, string> = {
+      pending: colors.warning,
+      confirmed: colors.info,
+      'in-progress': colors.secondary,
+      completed: colors.success,
+      cancelled: colors.error,
     };
-    return colors[status] || '#757575';
+    return statusColors[status] || colors.gray[500];
   };
 
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      pending: 'Pending',
-      confirmed: 'Confirmed',
-      'in-progress': 'In Progress',
-      completed: 'Completed',
-      cancelled: 'Cancelled',
+  const getStatusIcon = (status: string) => {
+    const statusIcons: Record<string, string> = {
+      pending: 'clock-outline',
+      confirmed: 'check-circle-outline',
+      'in-progress': 'progress-clock',
+      completed: 'check-all',
+      cancelled: 'close-circle-outline',
     };
-    return labels[status] || status;
+    return statusIcons[status] || 'information-outline';
   };
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2196F3" />
-      </View>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium]}
+        style={styles.centered}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Loading details...</Text>
+      </LinearGradient>
     );
   }
 
   if (!booking) {
     return (
-      <View style={styles.centered}>
-        <Text variant="titleMedium">Booking not found</Text>
-      </View>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium]}
+        style={styles.centered}
+      >
+        <MaterialCommunityIcons name="alert-circle" size={64} color={colors.gray[400]} />
+        <Text variant="titleMedium" style={styles.errorText}>Booking not found</Text>
+      </LinearGradient>
     );
   }
 
@@ -110,318 +121,530 @@ export const BookingDetailScreen = () => {
   const canPay = booking.status === 'confirmed' && booking.payment?.status === 'pending';
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <Card style={styles.headerCard}>
-          <Card.Content>
-            <View style={styles.headerTop}>
-              <View>
-                <Text variant="labelSmall" style={styles.bookingNumber}>
-                  Booking #{booking.bookingNumber}
-                </Text>
-                <Text variant="headlineSmall" style={styles.serviceName}>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium, colors.backgroundLight]}
+        style={styles.gradient}
+        locations={[0, 0.3, 1]}
+      >
+        <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            {/* Header Card */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={[colors.white, colors.gray[50]]}
+                style={styles.cardGradient}
+              >
+                <View style={styles.headerContent}>
+                  <View style={styles.headerIconContainer}>
+                    <LinearGradient
+                      colors={[getStatusColor(booking.status), getStatusColor(booking.status) + 'CC']}
+                      style={styles.headerIcon}
+                    >
+                      <MaterialCommunityIcons
+                        name={getStatusIcon(booking.status) as any}
+                        size={32}
+                        color={colors.white}
+                      />
+                    </LinearGradient>
+                  </View>
+                  <View style={styles.headerInfo}>
+                    <Text variant="labelSmall" style={styles.bookingLabel}>
+                      Booking ID
+                    </Text>
+                    <Text variant="headlineSmall" style={styles.bookingNumber}>
+                      #{booking.bookingNumber}
+                    </Text>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        { backgroundColor: getStatusColor(booking.status) + '20' },
+                      ]}
+                    >
+                      <Text
+                        style={[styles.statusText, { color: getStatusColor(booking.status) }]}
+                      >
+                        {booking.status}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </LinearGradient>
+            </View>
+
+            {/* Service Card */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={[colors.white, colors.gray[50]]}
+                style={styles.cardGradient}
+              >
+                <View style={styles.cardHeader}>
+                  <LinearGradient
+                    colors={[colors.primary, colors.primaryDark]}
+                    style={styles.cardIcon}
+                  >
+                    <MaterialCommunityIcons name="room-service-outline" size={20} color={colors.white} />
+                  </LinearGradient>
+                  <Text variant="titleMedium" style={styles.cardTitle}>
+                    Service Details
+                  </Text>
+                </View>
+                <Text variant="titleLarge" style={styles.serviceName}>
                   {booking.service?.name || 'Service'}
                 </Text>
-              </View>
-              <Chip
-                mode="flat"
-                style={{ backgroundColor: getStatusColor(booking.status) + '20' }}
-                textStyle={{ color: getStatusColor(booking.status), fontWeight: '600' }}
+              </LinearGradient>
+            </View>
+
+            {/* Schedule Card */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={[colors.white, colors.gray[50]]}
+                style={styles.cardGradient}
               >
-                {getStatusLabel(booking.status)}
-              </Chip>
-            </View>
-          </Card.Content>
-        </Card>
-
-        {/* Schedule */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.cardTitle}>
-              Schedule
-            </Text>
-            <View style={styles.infoRow}>
-              <Text style={styles.icon}>📅</Text>
-              <View style={styles.infoContent}>
-                <Text variant="labelSmall" style={styles.infoLabel}>
-                  Date
-                </Text>
-                <Text variant="bodyLarge">
-                  {new Date(booking.scheduledDate).toLocaleDateString('en-IN', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </Text>
-              </View>
-            </View>
-            {booking.scheduledTime && (
-              <View style={styles.infoRow}>
-                <Text style={styles.icon}>🕐</Text>
-                <View style={styles.infoContent}>
-                  <Text variant="labelSmall" style={styles.infoLabel}>
-                    Time
+                <View style={styles.cardHeader}>
+                  <LinearGradient
+                    colors={[colors.info, colors.info + 'CC']}
+                    style={styles.cardIcon}
+                  >
+                    <MaterialCommunityIcons name="calendar-clock" size={20} color={colors.white} />
+                  </LinearGradient>
+                  <Text variant="titleMedium" style={styles.cardTitle}>
+                    Schedule
                   </Text>
-                  <Text variant="bodyLarge">{booking.scheduledTime}</Text>
                 </View>
-              </View>
-            )}
-          </Card.Content>
-        </Card>
 
-        {/* Address */}
-        {booking.address && (
-          <Card style={styles.card}>
-            <Card.Content>
-              <Text variant="titleMedium" style={styles.cardTitle}>
-                Service Address
-              </Text>
-              <View style={styles.infoRow}>
-                <Text style={styles.icon}>📍</Text>
-                <View style={styles.infoContent}>
-                  <Text variant="bodyLarge">
-                    {booking.address.flatNumber}, {booking.address.building}
-                  </Text>
-                  <Text variant="bodyMedium" style={styles.addressText}>
-                    {booking.address.area}
-                  </Text>
-                  {booking.address.landmark && (
-                    <Text variant="bodySmall" style={styles.landmarkText}>
-                      Near {booking.address.landmark}
+                <View style={styles.infoRow}>
+                  <MaterialCommunityIcons name="calendar" size={18} color={colors.primary} />
+                  <View style={styles.infoContent}>
+                    <Text variant="labelSmall" style={styles.infoLabel}>
+                      Date
                     </Text>
-                  )}
-                </View>
-              </View>
-            </Card.Content>
-          </Card>
-        )}
-
-        {/* Sevak Info */}
-        {booking.sevak && (
-          <Card style={styles.card}>
-            <Card.Content>
-              <Text variant="titleMedium" style={styles.cardTitle}>
-                Service Provider
-              </Text>
-              <View style={styles.sevakInfo}>
-                <View style={styles.sevakAvatar}>
-                  <Text variant="headlineSmall">👤</Text>
-                </View>
-                <View style={styles.sevakDetails}>
-                  <Text variant="titleMedium">{booking.sevak.fullName}</Text>
-                  {booking.sevak.phoneNumber && (
-                    <Text variant="bodyMedium" style={styles.sevakContact}>
-                      📞 {booking.sevak.phoneNumber}
-                    </Text>
-                  )}
-                </View>
-              </View>
-            </Card.Content>
-          </Card>
-        )}
-
-        {/* Special Instructions */}
-        {booking.specialInstructions && (
-          <Card style={styles.card}>
-            <Card.Content>
-              <Text variant="titleMedium" style={styles.cardTitle}>
-                Special Instructions
-              </Text>
-              <Text variant="bodyMedium" style={styles.instructionsText}>
-                {booking.specialInstructions}
-              </Text>
-            </Card.Content>
-          </Card>
-        )}
-
-        {/* Payment Summary */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.cardTitle}>
-              Payment Summary
-            </Text>
-
-            <View style={styles.paymentRow}>
-              <Text variant="bodyLarge">Service Charge</Text>
-              <Text variant="bodyLarge">₹{booking.totalAmount}</Text>
-            </View>
-
-            <Divider style={styles.divider} />
-
-            <View style={styles.totalRow}>
-              <Text variant="titleLarge" style={styles.totalLabel}>
-                Total Amount
-              </Text>
-              <Text variant="titleLarge" style={styles.totalAmount}>
-                ₹{booking.totalAmount}
-              </Text>
-            </View>
-
-            {booking.payment && (
-              <Chip
-                mode="flat"
-                style={{
-                  backgroundColor:
-                    booking.payment.status === 'completed' ? '#4CAF50' : '#FF9800',
-                  alignSelf: 'flex-start',
-                  marginTop: 12,
-                }}
-                textStyle={{ color: '#FFFFFF' }}
-              >
-                Payment: {booking.payment.status}
-              </Chip>
-            )}
-          </Card.Content>
-        </Card>
-
-        {/* Timeline */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.cardTitle}>
-              Timeline
-            </Text>
-
-            <View style={styles.timeline}>
-              <View style={styles.timelineItem}>
-                <View style={styles.timelineDot} />
-                <View style={styles.timelineContent}>
-                  <Text variant="bodyMedium" style={styles.timelineLabel}>
-                    Booking Created
-                  </Text>
-                  <Text variant="bodySmall" style={styles.timelineDate}>
-                    {new Date(booking.createdAt).toLocaleString('en-IN')}
-                  </Text>
-                </View>
-              </View>
-
-              {booking.confirmedAt && (
-                <View style={styles.timelineItem}>
-                  <View style={styles.timelineDot} />
-                  <View style={styles.timelineContent}>
-                    <Text variant="bodyMedium" style={styles.timelineLabel}>
-                      Confirmed
-                    </Text>
-                    <Text variant="bodySmall" style={styles.timelineDate}>
-                      {new Date(booking.confirmedAt).toLocaleString('en-IN')}
+                    <Text variant="bodyLarge" style={styles.infoValue}>
+                      {new Date(booking.scheduledDate).toLocaleDateString('en-IN', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
                     </Text>
                   </View>
                 </View>
-              )}
 
-              {booking.completedAt && (
-                <View style={styles.timelineItem}>
-                  <View style={styles.timelineDot} />
-                  <View style={styles.timelineContent}>
-                    <Text variant="bodyMedium" style={styles.timelineLabel}>
-                      Completed
-                    </Text>
-                    <Text variant="bodySmall" style={styles.timelineDate}>
-                      {new Date(booking.completedAt).toLocaleString('en-IN')}
+                {booking.scheduledTime && (
+                  <View style={styles.infoRow}>
+                    <MaterialCommunityIcons name="clock-outline" size={18} color={colors.primary} />
+                    <View style={styles.infoContent}>
+                      <Text variant="labelSmall" style={styles.infoLabel}>
+                        Time
+                      </Text>
+                      <Text variant="bodyLarge" style={styles.infoValue}>
+                        {booking.scheduledTime}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </LinearGradient>
+            </View>
+
+            {/* Address Card */}
+            {booking.address && (
+              <View style={styles.card}>
+                <LinearGradient
+                  colors={[colors.white, colors.gray[50]]}
+                  style={styles.cardGradient}
+                >
+                  <View style={styles.cardHeader}>
+                    <LinearGradient
+                      colors={[colors.secondary, colors.secondaryDark]}
+                      style={styles.cardIcon}
+                    >
+                      <MaterialCommunityIcons name="map-marker" size={20} color={colors.white} />
+                    </LinearGradient>
+                    <Text variant="titleMedium" style={styles.cardTitle}>
+                      Service Address
                     </Text>
                   </View>
+
+                  <View style={styles.addressContent}>
+                    <Text variant="bodyLarge" style={styles.addressLine}>
+                      {booking.address.flatNumber}, {booking.address.building}
+                    </Text>
+                    <Text variant="bodyMedium" style={styles.addressLine}>
+                      {booking.address.area}
+                    </Text>
+                    {booking.address.landmark && (
+                      <Text variant="bodySmall" style={styles.landmarkText}>
+                        Near {booking.address.landmark}
+                      </Text>
+                    )}
+                  </View>
+                </LinearGradient>
+              </View>
+            )}
+
+            {/* Sevak Card */}
+            {booking.sevak && (
+              <View style={styles.card}>
+                <LinearGradient
+                  colors={[colors.white, colors.gray[50]]}
+                  style={styles.cardGradient}
+                >
+                  <View style={styles.cardHeader}>
+                    <LinearGradient
+                      colors={[colors.accent, colors.accentDark]}
+                      style={styles.cardIcon}
+                    >
+                      <MaterialCommunityIcons name="account" size={20} color={colors.white} />
+                    </LinearGradient>
+                    <Text variant="titleMedium" style={styles.cardTitle}>
+                      Service Provider
+                    </Text>
+                  </View>
+
+                  <View style={styles.sevakInfo}>
+                    <LinearGradient
+                      colors={[colors.primary, colors.primaryDark]}
+                      style={styles.sevakAvatar}
+                    >
+                      <MaterialCommunityIcons name="account" size={28} color={colors.white} />
+                    </LinearGradient>
+                    <View style={styles.sevakDetails}>
+                      <Text variant="titleMedium" style={styles.sevakName}>
+                        {booking.sevak.fullName}
+                      </Text>
+                      {booking.sevak.phoneNumber && (
+                        <View style={styles.sevakContactRow}>
+                          <MaterialCommunityIcons name="phone" size={14} color={colors.gray[600]} />
+                          <Text variant="bodyMedium" style={styles.sevakContact}>
+                            {booking.sevak.phoneNumber}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                </LinearGradient>
+              </View>
+            )}
+
+            {/* Special Instructions */}
+            {booking.specialInstructions && (
+              <View style={styles.card}>
+                <LinearGradient
+                  colors={[colors.white, colors.gray[50]]}
+                  style={styles.cardGradient}
+                >
+                  <View style={styles.cardHeader}>
+                    <LinearGradient
+                      colors={[colors.warning, colors.warning + 'CC']}
+                      style={styles.cardIcon}
+                    >
+                      <MaterialCommunityIcons name="note-text" size={20} color={colors.white} />
+                    </LinearGradient>
+                    <Text variant="titleMedium" style={styles.cardTitle}>
+                      Special Instructions
+                    </Text>
+                  </View>
+                  <Text variant="bodyMedium" style={styles.instructionsText}>
+                    {booking.specialInstructions}
+                  </Text>
+                </LinearGradient>
+              </View>
+            )}
+
+            {/* Payment Summary Card */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={[colors.white, colors.gray[50]]}
+                style={styles.cardGradient}
+              >
+                <View style={styles.cardHeader}>
+                  <LinearGradient
+                    colors={[colors.success, colors.success + 'CC']}
+                    style={styles.cardIcon}
+                  >
+                    <MaterialCommunityIcons name="currency-inr" size={20} color={colors.white} />
+                  </LinearGradient>
+                  <Text variant="titleMedium" style={styles.cardTitle}>
+                    Payment Summary
+                  </Text>
                 </View>
+
+                <View style={styles.paymentRow}>
+                  <Text variant="bodyLarge" style={styles.paymentLabel}>Service Charge</Text>
+                  <Text variant="bodyLarge" style={styles.paymentValue}>₹{booking.totalAmount}</Text>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.totalRow}>
+                  <Text variant="titleLarge" style={styles.totalLabel}>
+                    Total Amount
+                  </Text>
+                  <Text variant="titleLarge" style={styles.totalAmount}>
+                    ₹{booking.totalAmount}
+                  </Text>
+                </View>
+
+                {booking.payment && (
+                  <View
+                    style={[
+                      styles.paymentStatusBadge,
+                      {
+                        backgroundColor:
+                          booking.payment.status === 'completed'
+                            ? colors.success + '20'
+                            : colors.warning + '20',
+                      },
+                    ]}
+                  >
+                    <MaterialCommunityIcons
+                      name={booking.payment.status === 'completed' ? 'check-circle' : 'clock-outline'}
+                      size={16}
+                      color={booking.payment.status === 'completed' ? colors.success : colors.warning}
+                    />
+                    <Text
+                      style={[
+                        styles.paymentStatusText,
+                        {
+                          color:
+                            booking.payment.status === 'completed' ? colors.success : colors.warning,
+                        },
+                      ]}
+                    >
+                      Payment: {booking.payment.status}
+                    </Text>
+                  </View>
+                )}
+              </LinearGradient>
+            </View>
+
+            {/* Timeline Card */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={[colors.white, colors.gray[50]]}
+                style={styles.cardGradient}
+              >
+                <View style={styles.cardHeader}>
+                  <LinearGradient
+                    colors={[colors.info, colors.info + 'CC']}
+                    style={styles.cardIcon}
+                  >
+                    <MaterialCommunityIcons name="timeline-clock" size={20} color={colors.white} />
+                  </LinearGradient>
+                  <Text variant="titleMedium" style={styles.cardTitle}>
+                    Timeline
+                  </Text>
+                </View>
+
+                <View style={styles.timeline}>
+                  <View style={styles.timelineItem}>
+                    <View style={[styles.timelineDot, { backgroundColor: colors.primary }]} />
+                    <View style={styles.timelineContent}>
+                      <Text variant="bodyMedium" style={styles.timelineLabel}>
+                        Booking Created
+                      </Text>
+                      <Text variant="bodySmall" style={styles.timelineDate}>
+                        {new Date(booking.createdAt).toLocaleString('en-IN')}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {booking.confirmedAt && (
+                    <View style={styles.timelineItem}>
+                      <View style={[styles.timelineDot, { backgroundColor: colors.info }]} />
+                      <View style={styles.timelineContent}>
+                        <Text variant="bodyMedium" style={styles.timelineLabel}>
+                          Confirmed
+                        </Text>
+                        <Text variant="bodySmall" style={styles.timelineDate}>
+                          {new Date(booking.confirmedAt).toLocaleString('en-IN')}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+
+                  {booking.completedAt && (
+                    <View style={styles.timelineItem}>
+                      <View style={[styles.timelineDot, { backgroundColor: colors.success }]} />
+                      <View style={styles.timelineContent}>
+                        <Text variant="bodyMedium" style={styles.timelineLabel}>
+                          Completed
+                        </Text>
+                        <Text variant="bodySmall" style={styles.timelineDate}>
+                          {new Date(booking.completedAt).toLocaleString('en-IN')}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              </LinearGradient>
+            </View>
+
+            <View style={{ height: 100 }} />
+          </ScrollView>
+
+          {/* Action Buttons */}
+          {(canCancel || canPay) && (
+            <View style={styles.bottomBar}>
+              {canCancel && (
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={handleCancelBooking}
+                  disabled={actionLoading}
+                >
+                  <LinearGradient
+                    colors={[colors.error, colors.error + 'CC']}
+                    style={styles.actionButtonGradient}
+                  >
+                    <MaterialCommunityIcons name="close-circle" size={20} color={colors.white} />
+                    <Text style={styles.actionButtonText}>Cancel</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+              {canPay && (
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => {
+                    navigation.navigate('Payment', { bookingId: booking._id });
+                  }}
+                  disabled={actionLoading}
+                >
+                  <LinearGradient
+                    colors={[colors.primary, colors.primaryDark]}
+                    style={styles.actionButtonGradient}
+                  >
+                    <MaterialCommunityIcons name="cash" size={20} color={colors.white} />
+                    <Text style={styles.actionButtonText}>Pay Now</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
               )}
             </View>
-          </Card.Content>
-        </Card>
-      </ScrollView>
-
-      {/* Action Buttons */}
-      {(canCancel || canPay) && (
-        <View style={styles.bottomBar}>
-          {canCancel && (
-            <Button
-              mode="outlined"
-              onPress={handleCancelBooking}
-              style={styles.actionButton}
-              disabled={actionLoading}
-            >
-              Cancel Booking
-            </Button>
           )}
-          {canPay && (
-            <Button
-              mode="contained"
-              onPress={() => {
-                navigation.navigate('Payment', { bookingId: booking._id });
-              }}
-              style={styles.actionButton}
-              disabled={actionLoading}
-            >
-              Pay Now
-            </Button>
-          )}
-        </View>
-      )}
-    </SafeAreaView>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: spacing.md,
+    color: colors.gray[300],
+    fontSize: 16,
+  },
+  errorText: {
+    marginTop: spacing.md,
+    color: colors.gray[400],
+    fontSize: 16,
+  },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  headerCard: {
-    marginBottom: 16,
-    elevation: 2,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  bookingNumber: {
-    color: '#999999',
-    marginBottom: 4,
-  },
-  serviceName: {
-    fontWeight: 'bold',
-    color: '#333333',
+    padding: spacing.lg,
+    paddingBottom: 120,
   },
   card: {
-    marginBottom: 16,
-    elevation: 2,
+    marginBottom: spacing.md,
+  },
+  cardGradient: {
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    ...shadows.md,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIconContainer: {
+    marginRight: spacing.md,
+  },
+  headerIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerInfo: {
+    flex: 1,
+  },
+  bookingLabel: {
+    color: colors.gray[600],
+    marginBottom: spacing.xs,
+  },
+  bookingNumber: {
+    fontWeight: '800',
+    color: colors.gray[900],
+    marginBottom: spacing.sm,
+    letterSpacing: -0.3,
+  },
+  statusBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.md,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'capitalize',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  cardIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
   },
   cardTitle: {
-    fontWeight: '600',
-    color: '#333333',
-    marginBottom: 16,
+    fontWeight: '700',
+    color: colors.gray[900],
+  },
+  serviceName: {
+    color: colors.gray[900],
+    fontWeight: '700',
   },
   infoRow: {
     flexDirection: 'row',
-    marginBottom: 12,
-  },
-  icon: {
-    fontSize: 20,
-    marginRight: 12,
-    width: 24,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
   infoContent: {
     flex: 1,
   },
   infoLabel: {
-    color: '#999999',
-    marginBottom: 4,
+    color: colors.gray[600],
+    marginBottom: 2,
   },
-  addressText: {
-    color: '#666666',
-    marginTop: 4,
+  infoValue: {
+    color: colors.gray[900],
+  },
+  addressContent: {
+    gap: spacing.xs,
+  },
+  addressLine: {
+    color: colors.gray[900],
   },
   landmarkText: {
-    color: '#999999',
-    marginTop: 2,
+    color: colors.gray[600],
   },
   sevakInfo: {
     flexDirection: 'row',
@@ -430,86 +653,128 @@ const styles = StyleSheet.create({
   sevakAvatar: {
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: '#E3F2FD',
+    borderRadius: borderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: spacing.md,
   },
   sevakDetails: {
     flex: 1,
   },
+  sevakName: {
+    color: colors.gray[900],
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  sevakContactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
   sevakContact: {
-    color: '#666666',
-    marginTop: 4,
+    color: colors.gray[700],
   },
   instructionsText: {
-    color: '#666666',
+    color: colors.gray[700],
     lineHeight: 20,
   },
   paymentRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
+  },
+  paymentLabel: {
+    color: colors.gray[700],
+  },
+  paymentValue: {
+    color: colors.gray[900],
+    fontWeight: '600',
   },
   divider: {
-    marginVertical: 12,
+    height: 1,
+    backgroundColor: colors.gray[300],
+    marginVertical: spacing.md,
   },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: spacing.md,
   },
   totalLabel: {
-    fontWeight: 'bold',
-    color: '#333333',
+    fontWeight: '800',
+    color: colors.gray[900],
   },
   totalAmount: {
-    fontWeight: 'bold',
-    color: '#2196F3',
+    fontWeight: '800',
+    color: colors.primary,
+  },
+  paymentStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    gap: spacing.xs,
+  },
+  paymentStatusText: {
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'capitalize',
   },
   timeline: {
-    paddingLeft: 8,
+    paddingLeft: spacing.xs,
   },
   timelineItem: {
     flexDirection: 'row',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   timelineDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#2196F3',
     marginTop: 4,
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   timelineContent: {
     flex: 1,
   },
   timelineLabel: {
     fontWeight: '600',
-    color: '#333333',
-    marginBottom: 4,
+    color: colors.gray[900],
+    marginBottom: 2,
   },
   timelineDate: {
-    color: '#999999',
+    color: colors.gray[600],
   },
   bottomBar: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
-    padding: 16,
+    backgroundColor: colors.white,
+    padding: spacing.lg,
     flexDirection: 'row',
-    gap: 12,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    gap: spacing.md,
+    ...shadows.lg,
   },
   actionButton: {
     flex: 1,
+  },
+  actionButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.lg,
+    gap: spacing.sm,
+    ...shadows.md,
+  },
+  actionButtonText: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 16,
   },
 });
