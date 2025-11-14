@@ -30,14 +30,27 @@ export const ServiceDetailScreen = () => {
   const loadServiceDetail = async () => {
     try {
       setLoading(true);
+      console.log('📋 [ServiceDetailScreen] Loading service:', serviceId);
       const response = await serviceApi.getServiceById(serviceId);
+      console.log('📥 [ServiceDetailScreen] API Response:', response);
 
       if (response.success && response.data) {
-        setService(response.data);
+        // Extract service from response.data.service
+        const serviceData = response.data.service || response.data;
+        console.log('✅ [ServiceDetailScreen] Service data:', serviceData);
+        setService(serviceData);
       }
-    } catch (error) {
-      console.error('Error loading service detail:', error);
-      Alert.alert('Error', 'Unable to load service details. Please try again.');
+    } catch (error: any) {
+      console.error('❌ [ServiceDetailScreen] Error loading service:', error);
+      console.error('❌ [ServiceDetailScreen] Error details:', {
+        message: error.message,
+        response: error.response?.data,
+      });
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || error.message || 'Unable to load service details. Please try again.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setLoading(false);
     }
@@ -45,20 +58,31 @@ export const ServiceDetailScreen = () => {
 
   const handleToggleFavorite = async () => {
     try {
+      console.log(`🔖 [ServiceDetailScreen] Toggling favorite for service: ${serviceId}`);
       if (isFavorite) {
         await serviceApi.removeFromFavorites(serviceId);
         setIsFavorite(false);
+        console.log('✅ [ServiceDetailScreen] Removed from favorites');
+        Alert.alert('Success', 'Removed from favorites');
       } else {
         await serviceApi.addToFavorites(serviceId);
         setIsFavorite(true);
+        console.log('✅ [ServiceDetailScreen] Added to favorites');
+        Alert.alert('Success', 'Added to favorites');
       }
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
+    } catch (error: any) {
+      console.error('❌ [ServiceDetailScreen] Error toggling favorite:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || error.message || 'Unable to update favorites',
+        [{ text: 'OK' }]
+      );
     }
   };
 
   const handleBookService = () => {
     if (service) {
+      console.log('🎫 [ServiceDetailScreen] Navigating to CreateBooking:', service._id);
       navigation.navigate('CreateBooking', { serviceId: service._id });
     }
   };
@@ -179,7 +203,7 @@ export const ServiceDetailScreen = () => {
                       ₹{service.basePrice}
                     </Text>
                     <Text variant="bodyMedium" style={styles.priceUnit}>
-                      {service.pricingModel || 'per service'}
+                      {service.priceUnit || 'per service'}
                     </Text>
                   </View>
                 </LinearGradient>
@@ -242,8 +266,40 @@ export const ServiceDetailScreen = () => {
                 </View>
               )}
 
+              {/* FAQs Card */}
+              {service.faqs && service.faqs.length > 0 && (
+                <View style={styles.card}>
+                  <LinearGradient
+                    colors={[colors.white, colors.gray[50]]}
+                    style={styles.cardGradient}
+                  >
+                    <View style={styles.cardHeader}>
+                      <LinearGradient
+                        colors={[colors.primary, colors.primaryDark]}
+                        style={styles.cardIcon}
+                      >
+                        <MaterialCommunityIcons name="help-circle" size={20} color={colors.white} />
+                      </LinearGradient>
+                      <Text variant="titleMedium" style={styles.cardTitle}>
+                        Frequently Asked Questions
+                      </Text>
+                    </View>
+                    {service.faqs.map((faq: any, index: number) => (
+                      <View key={index} style={styles.faqItem}>
+                        <Text variant="titleSmall" style={styles.faqQuestion}>
+                          Q: {faq.question}
+                        </Text>
+                        <Text variant="bodyMedium" style={styles.faqAnswer}>
+                          A: {faq.answer}
+                        </Text>
+                      </View>
+                    ))}
+                  </LinearGradient>
+                </View>
+              )}
+
               {/* Duration Card */}
-              {service.estimatedDuration && (
+              {service.duration && (
                 <View style={styles.card}>
                   <LinearGradient
                     colors={[colors.white, colors.gray[50]]}
@@ -261,14 +317,14 @@ export const ServiceDetailScreen = () => {
                       </Text>
                     </View>
                     <Text variant="bodyLarge" style={styles.infoText}>
-                      Approximately {service.estimatedDuration} minutes
+                      Approximately {service.duration} minutes
                     </Text>
                   </LinearGradient>
                 </View>
               )}
 
               {/* Availability Card */}
-              {service.isAvailable !== undefined && (
+              {service.isActive !== undefined && (
                 <View style={styles.card}>
                   <LinearGradient
                     colors={[colors.white, colors.gray[50]]}
@@ -276,11 +332,11 @@ export const ServiceDetailScreen = () => {
                   >
                     <View style={styles.cardHeader}>
                       <LinearGradient
-                        colors={service.isAvailable ? [colors.success, colors.success + 'CC'] : [colors.error, colors.error + 'CC']}
+                        colors={service.isActive ? [colors.success, colors.success + 'CC'] : [colors.error, colors.error + 'CC']}
                         style={styles.cardIcon}
                       >
                         <MaterialCommunityIcons
-                          name={service.isAvailable ? 'check-circle' : 'close-circle'}
+                          name={service.isActive ? 'check-circle' : 'close-circle'}
                           size={20}
                           color={colors.white}
                         />
@@ -292,16 +348,16 @@ export const ServiceDetailScreen = () => {
                     <View
                       style={[
                         styles.availabilityBadge,
-                        { backgroundColor: service.isAvailable ? colors.success + '20' : colors.error + '20' },
+                        { backgroundColor: service.isActive ? colors.success + '20' : colors.error + '20' },
                       ]}
                     >
                       <Text
                         style={[
                           styles.availabilityText,
-                          { color: service.isAvailable ? colors.success : colors.error },
+                          { color: service.isActive ? colors.success : colors.error },
                         ]}
                       >
-                        {service.isAvailable ? 'Available Now' : 'Currently Unavailable'}
+                        {service.isActive ? 'Available Now' : 'Currently Unavailable'}
                       </Text>
                     </View>
                   </LinearGradient>
@@ -325,10 +381,10 @@ export const ServiceDetailScreen = () => {
             <TouchableOpacity
               style={styles.bookButton}
               onPress={handleBookService}
-              disabled={!service.isAvailable}
+              disabled={!service.isActive}
             >
               <LinearGradient
-                colors={service.isAvailable ? [colors.primary, colors.primaryDark] : [colors.gray[400], colors.gray[500]]}
+                colors={service.isActive ? [colors.primary, colors.primaryDark] : [colors.gray[400], colors.gray[500]]}
                 style={styles.bookButtonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -511,6 +567,21 @@ const styles = StyleSheet.create({
   availabilityText: {
     fontWeight: '700',
     fontSize: 14,
+  },
+  faqItem: {
+    marginBottom: spacing.md,
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray[200],
+  },
+  faqQuestion: {
+    color: colors.gray[900],
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  faqAnswer: {
+    color: colors.gray[600],
+    lineHeight: 20,
   },
   bottomBar: {
     position: 'absolute',
