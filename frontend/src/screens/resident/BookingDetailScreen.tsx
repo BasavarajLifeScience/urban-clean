@@ -36,7 +36,16 @@ export const BookingDetailScreen = () => {
 
       if (response.success && response.data) {
         // Backend returns { booking, service, sevak, timeline }
-        const bookingData = response.data.booking || response.data;
+        let bookingData = response.data.booking || response.data;
+
+        // If service and sevak are returned separately, merge them into the booking
+        if (response.data.service && bookingData.serviceId && typeof bookingData.serviceId === 'string') {
+          bookingData = { ...bookingData, serviceId: response.data.service };
+        }
+        if (response.data.sevak && bookingData.sevakId && typeof bookingData.sevakId === 'string') {
+          bookingData = { ...bookingData, sevakId: response.data.sevak };
+        }
+
         console.log('✅ [BookingDetailScreen] Booking data:', bookingData);
         setBooking(bookingData);
       }
@@ -198,7 +207,7 @@ export const BookingDetailScreen = () => {
                   </Text>
                 </View>
                 <Text variant="titleLarge" style={styles.serviceName}>
-                  {booking.service?.name || 'Service'}
+                  {typeof booking.serviceId === 'object' ? booking.serviceId.name : 'Service'}
                 </Text>
               </LinearGradient>
             </View>
@@ -291,7 +300,7 @@ export const BookingDetailScreen = () => {
             )}
 
             {/* Sevak Card */}
-            {booking.sevak && (
+            {booking.sevakId && typeof booking.sevakId === 'object' && (
               <View style={styles.card}>
                 <LinearGradient
                   colors={[colors.white, colors.gray[50]]}
@@ -318,13 +327,13 @@ export const BookingDetailScreen = () => {
                     </LinearGradient>
                     <View style={styles.sevakDetails}>
                       <Text variant="titleMedium" style={styles.sevakName}>
-                        {booking.sevak.fullName}
+                        {booking.sevakId.fullName}
                       </Text>
-                      {booking.sevak.phoneNumber && (
+                      {booking.sevakId.phoneNumber && (
                         <View style={styles.sevakContactRow}>
                           <MaterialCommunityIcons name="phone" size={14} color={colors.gray[600]} />
                           <Text variant="bodyMedium" style={styles.sevakContact}>
-                            {booking.sevak.phoneNumber}
+                            {booking.sevakId.phoneNumber}
                           </Text>
                         </View>
                       )}
