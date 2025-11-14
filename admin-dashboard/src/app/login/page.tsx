@@ -132,12 +132,10 @@ export default function LoginPage() {
                       value: 3,
                       message: 'Admin code must be at least 3 characters',
                     },
+                    setValueAs: (value) => value.toUpperCase(),
                   })}
                   className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 placeholder:text-gray-400 uppercase"
                   placeholder="SA001"
-                  onChange={(e) => {
-                    e.target.value = e.target.value.toUpperCase();
-                  }}
                 />
               </div>
               {errors.adminCode && (
