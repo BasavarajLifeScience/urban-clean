@@ -31,6 +31,7 @@ export type ResidentStackParamList = {
 export type SevakTabParamList = {
   Dashboard: undefined;
   Jobs: undefined;
+  Available: undefined;
   Earnings: undefined;
   Profile: undefined;
 };

@@ -102,4 +102,21 @@ export const sevakApi = {
     const response = await api.get('/sevak/attendance', { params });
     return response.data;
   },
+
+  getAvailableJobs: async (params?: {
+    page?: number;
+    limit?: number;
+    category?: string;
+  }): Promise<ApiResponse<{
+    jobs: Job[];
+    pagination: any;
+  }>> => {
+    const response = await api.get('/sevak/available-jobs', { params });
+    return response.data;
+  },
+
+  acceptJob: async (jobId: string): Promise<ApiResponse<{ booking: any }>> => {
+    const response = await api.post(`/sevak/jobs/${jobId}/accept`);
+    return response.data;
+  },
 };

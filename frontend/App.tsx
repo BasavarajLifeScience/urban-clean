@@ -40,6 +40,7 @@ import {
   SevakJobsListScreen,
   SevakJobDetailScreen,
   SevakEarningsScreen,
+  SevakAvailableJobsScreen,
 } from './src/screens/sevak';
 
 // Profile Screen
@@ -247,10 +248,20 @@ const SevakTabs = () => {
         }}
       />
       <Tab.Screen
+        name="Available"
+        component={SevakAvailableJobsScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="briefcase-search" size={size} color={color} />
+          ),
+          title: 'Available Jobs',
+        }}
+      />
+      <Tab.Screen
         name="Earnings"
         component={SevakEarningsScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size}) => (
             <MaterialCommunityIcons name="currency-inr" size={size} color={color} />
           ),
         }}
