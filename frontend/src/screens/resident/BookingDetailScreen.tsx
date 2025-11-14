@@ -30,14 +30,22 @@ export const BookingDetailScreen = () => {
   const loadBookingDetail = async () => {
     try {
       setLoading(true);
+      console.log('📋 [BookingDetailScreen] Loading booking:', bookingId);
       const response = await bookingApi.getBookingById(bookingId);
+      console.log('📥 [BookingDetailScreen] Response:', response);
 
       if (response.success && response.data) {
-        setBooking(response.data);
+        // Backend returns { booking, service, sevak, timeline }
+        const bookingData = response.data.booking || response.data;
+        console.log('✅ [BookingDetailScreen] Booking data:', bookingData);
+        setBooking(bookingData);
       }
-    } catch (error) {
-      console.error('Error loading booking:', error);
-      Alert.alert('Error', 'Unable to load booking details.');
+    } catch (error: any) {
+      console.error('❌ [BookingDetailScreen] Error loading booking:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || error.message || 'Unable to load booking details.'
+      );
     } finally {
       setLoading(false);
     }
