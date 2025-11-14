@@ -6,6 +6,7 @@ const Profile = require('../models/Profile');
 const Service = require('../models/Service');
 const Category = require('../models/Category');
 const NotificationSettings = require('../models/NotificationSettings');
+const Admin = require('../models/Admin');
 const logger = require('./logger');
 
 const seedData = async () => {
@@ -20,6 +21,7 @@ const seedData = async () => {
     await Service.deleteMany({});
     await Category.deleteMany({});
     await NotificationSettings.deleteMany({});
+    await Admin.deleteMany({});
 
     console.log('✅ Cleared existing data\n');
 
@@ -52,12 +54,34 @@ const seedData = async () => {
         isVerified: true,
         isActive: true,
       },
+      {
+        phoneNumber: '+919876543213',
+        email: 'superadmin@societybooking.com',
+        password: 'Admin@123',
+        role: 'admin',
+        fullName: 'Super Admin',
+        isVerified: true,
+        isActive: true,
+      },
     ]);
 
     console.log('✅ Created users');
     console.log('   📧 Resident: resident@example.com / password123');
     console.log('   📧 Sevak: sevak@example.com / password123');
-    console.log('   📧 Vendor: vendor@example.com / password123\n');
+    console.log('   📧 Vendor: vendor@example.com / password123');
+    console.log('   📧 Super Admin: superadmin@societybooking.com / Admin@123\n');
+
+    // Create admin profile
+    await Admin.create({
+      userId: users[3]._id,
+      adminCode: 'SA001',
+      isSuperAdmin: true,
+      department: 'Operations',
+      permissions: [], // Super admin has all permissions
+    });
+
+    console.log('✅ Created admin profile');
+    console.log('   🔑 Admin Code: SA001\n');
 
     // Create profiles
     await Profile.create([

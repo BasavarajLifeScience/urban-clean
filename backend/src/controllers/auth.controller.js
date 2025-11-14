@@ -279,6 +279,70 @@ const resetPassword = async (req, res, next) => {
 };
 
 /**
+ * Admin login with admin code
+ */
+const adminLogin = async (req, res, next) => {
+  try {
+    const { email, password, adminCode } = req.body;
+
+    // Find user with admin role
+    const user = await User.findOne({ email, role: 'admin' }).select('+password');
+
+    if (!user) {
+      throw new UnauthorizedError('Invalid admin credentials');
+    }
+
+    // Check password
+    const isPasswordValid = await user.comparePassword(password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedError('Invalid admin credentials');
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedError('Admin account is disabled');
+    }
+
+    // Verify admin code
+    const Admin = require('../models/Admin');
+    const adminProfile = await Admin.findOne({ userId: user._id, adminCode });
+
+    if (!adminProfile) {
+      throw new UnauthorizedError('Invalid admin code');
+    }
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Generate tokens
+    const accessToken = generateAccessToken({ userId: user._id, email: user.email, role: user.role });
+    const refreshToken = generateRefreshToken({ userId: user._id });
+
+    // Save refresh token
+    await RefreshToken.create({
+      userId: user._id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+    });
+
+    return sendSuccess(res, 200, 'Admin login successful', {
+      accessToken,
+      refreshToken,
+      user: user.toPublicJSON(),
+      admin: {
+        adminCode: adminProfile.adminCode,
+        isSuperAdmin: adminProfile.isSuperAdmin,
+        department: adminProfile.department,
+        permissions: adminProfile.permissions,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Logout
  */
 const logout = async (req, res, next) => {
@@ -300,6 +364,7 @@ module.exports = {
   register,
   verifyOTPController,
   login,
+  adminLogin,
   refreshAccessToken,
   forgotPassword,
   resetPassword,

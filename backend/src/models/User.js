@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['resident', 'sevak', 'vendor'],
+    enum: ['resident', 'sevak', 'vendor', 'admin'],
     required: [true, 'Role is required'],
   },
   fullName: {
@@ -42,6 +42,21 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true,
+  },
+  // Blacklist fields (for Sevaks)
+  isBlacklisted: {
+    type: Boolean,
+    default: false,
+  },
+  blacklistReason: {
+    type: String,
+  },
+  blacklistedAt: {
+    type: Date,
+  },
+  blacklistedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
   },
   lastLogin: {
     type: Date,
