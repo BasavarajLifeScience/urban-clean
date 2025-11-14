@@ -99,9 +99,18 @@ const getBookingById = async (req, res, next) => {
     }
 
     // Check if user has permission to view this booking
-    if (booking.residentId._id.toString() !== userId && booking.sevakId?._id.toString() !== userId) {
+    // Handle both populated and non-populated residentId/sevakId
+    const residentIdStr = booking.residentId?._id?.toString() || booking.residentId?.toString();
+    const sevakIdStr = booking.sevakId?._id?.toString() || booking.sevakId?.toString();
+
+    console.log('🔍 [Booking Controller] Comparing:', { userId, residentIdStr, sevakIdStr });
+
+    if (residentIdStr !== userId && sevakIdStr !== userId) {
+      console.error('❌ [Booking Controller] Permission denied');
       throw new ForbiddenError('You do not have permission to view this booking');
     }
+
+    console.log('✅ [Booking Controller] Permission granted');
 
     return sendSuccess(res, 200, 'Booking retrieved successfully', {
       booking,
