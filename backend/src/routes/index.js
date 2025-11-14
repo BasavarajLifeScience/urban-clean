@@ -11,6 +11,7 @@ const ratingRoutes = require('./rating.routes');
 const sevakRoutes = require('./sevak.routes');
 const vendorRoutes = require('./vendor.routes');
 const notificationRoutes = require('./notification.routes');
+const adminRoutes = require('./admin.routes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -22,6 +23,7 @@ router.use('/ratings', ratingRoutes);
 router.use('/sevak', sevakRoutes);
 router.use('/vendor', vendorRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/admin', adminRoutes);
 
 // Health check route
 router.get('/health', (req, res) => {

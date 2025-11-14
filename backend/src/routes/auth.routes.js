@@ -39,10 +39,17 @@ const resetPasswordValidation = [
   body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
 ];
 
+const adminLoginValidation = [
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('password').notEmpty().withMessage('Password is required'),
+  body('adminCode').notEmpty().withMessage('Admin code is required'),
+];
+
 // Routes
 router.post('/register', authLimiter, registerValidation, validate, asyncHandler(authController.register));
 router.post('/verify-otp', otpLimiter, verifyOTPValidation, validate, asyncHandler(authController.verifyOTPController));
 router.post('/login', authLimiter, loginValidation, validate, asyncHandler(authController.login));
+router.post('/admin-login', authLimiter, adminLoginValidation, validate, asyncHandler(authController.adminLogin));
 router.post('/refresh-token', refreshTokenValidation, validate, asyncHandler(authController.refreshAccessToken));
 router.post('/forgot-password', passwordResetLimiter, forgotPasswordValidation, validate, asyncHandler(authController.forgotPassword));
 router.post('/reset-password', passwordResetLimiter, resetPasswordValidation, validate, asyncHandler(authController.resetPassword));
