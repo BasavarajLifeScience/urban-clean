@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Button, Checkbox, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { LinearGradient } from 'expo-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { AuthStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
 import { loginSchema } from '../../utils/validation';
+import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
@@ -61,160 +64,255 @@ export const LoginScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text variant="displaySmall" style={styles.title}>
-            Welcome Back
-          </Text>
-          <Text variant="bodyLarge" style={styles.subtitle}>
-            Login to continue
-          </Text>
-        </View>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium, colors.backgroundMedium]}
+        style={styles.gradient}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <MaterialCommunityIcons name="arrow-left" size={24} color={colors.white} />
+            </TouchableOpacity>
 
-        <View style={styles.form}>
-          <Controller
-            control={control}
-            name="phoneOrEmail"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                label="Phone or Email"
-                mode="outlined"
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={!!errors.phoneOrEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                autoComplete="email"
-                style={styles.input}
-              />
-            )}
-          />
-          {errors.phoneOrEmail && (
-            <Text variant="bodySmall" style={styles.errorText}>
-              {errors.phoneOrEmail.message}
-            </Text>
-          )}
-
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                label="Password"
-                mode="outlined"
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={!!errors.password}
-                secureTextEntry={!showPassword}
-                right={
-                  <TextInput.Icon
-                    icon={showPassword ? 'eye-off' : 'eye'}
-                    onPress={() => setShowPassword(!showPassword)}
-                  />
-                }
-                textContentType="password"
-                autoComplete="password"
-                style={styles.input}
-              />
-            )}
-          />
-          {errors.password && (
-            <Text variant="bodySmall" style={styles.errorText}>
-              {errors.password.message}
-            </Text>
-          )}
-
-          <View style={styles.optionsRow}>
-            <View style={styles.checkboxContainer}>
-              <Checkbox
-                status={rememberMe ? 'checked' : 'unchecked'}
-                onPress={() => setRememberMe(!rememberMe)}
-              />
-              <Text variant="bodyMedium" onPress={() => setRememberMe(!rememberMe)}>
-                Remember me
+            <View style={styles.header}>
+              <View style={styles.iconContainer}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primaryDark]}
+                  style={styles.iconGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <MaterialCommunityIcons name="shield-account" size={32} color={colors.white} />
+                </LinearGradient>
+              </View>
+              <Text variant="displaySmall" style={styles.title}>
+                Welcome Back
+              </Text>
+              <Text variant="bodyLarge" style={styles.subtitle}>
+                Sign in to continue
               </Text>
             </View>
 
-            <Button mode="text" onPress={handleForgotPassword} compact>
-              Forgot Password?
-            </Button>
-          </View>
+            <View style={styles.formCard}>
+              <Controller
+                control={control}
+                name="phoneOrEmail"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    label="Phone or Email"
+                    mode="outlined"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={!!errors.phoneOrEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    textContentType="emailAddress"
+                    autoComplete="email"
+                    style={styles.input}
+                    outlineColor={colors.gray[300]}
+                    activeOutlineColor={colors.primary}
+                    textColor={colors.gray[900]}
+                    left={<TextInput.Icon icon="email-outline" color={colors.gray[600]} />}
+                  />
+                )}
+              />
+              {errors.phoneOrEmail && (
+                <Text variant="bodySmall" style={styles.errorText}>
+                  {errors.phoneOrEmail.message}
+                </Text>
+              )}
 
-          <Button
-            mode="contained"
-            onPress={handleSubmit(onSubmit)}
-            style={styles.loginButton}
-            contentStyle={styles.buttonContent}
-            disabled={loading}
-          >
-            {loading ? <ActivityIndicator color="#FFFFFF" /> : 'Login'}
-          </Button>
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    label="Password"
+                    mode="outlined"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={!!errors.password}
+                    secureTextEntry={!showPassword}
+                    right={
+                      <TextInput.Icon
+                        icon={showPassword ? 'eye-off' : 'eye'}
+                        onPress={() => setShowPassword(!showPassword)}
+                        color={colors.gray[600]}
+                      />
+                    }
+                    textContentType="password"
+                    autoComplete="password"
+                    style={styles.input}
+                    outlineColor={colors.gray[300]}
+                    activeOutlineColor={colors.primary}
+                    textColor={colors.gray[900]}
+                    left={<TextInput.Icon icon="lock-outline" color={colors.gray[600]} />}
+                  />
+                )}
+              />
+              {errors.password && (
+                <Text variant="bodySmall" style={styles.errorText}>
+                  {errors.password.message}
+                </Text>
+              )}
 
-          <View style={styles.signupContainer}>
-            <Text variant="bodyMedium" style={styles.signupText}>
-              Don't have an account?{' '}
-            </Text>
-            <Button mode="text" onPress={handleSignUp} compact>
-              Sign Up
-            </Button>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+              <View style={styles.optionsRow}>
+                <TouchableOpacity
+                  style={styles.checkboxContainer}
+                  onPress={() => setRememberMe(!rememberMe)}
+                >
+                  <Checkbox
+                    status={rememberMe ? 'checked' : 'unchecked'}
+                    onPress={() => setRememberMe(!rememberMe)}
+                    color={colors.primary}
+                  />
+                  <Text variant="bodyMedium" style={styles.rememberText}>
+                    Remember me
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={handleForgotPassword}>
+                  <Text style={styles.forgotPasswordText}>
+                    Forgot Password?
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <LinearGradient
+                colors={[colors.primary, colors.primaryDark]}
+                style={styles.loginButton}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Button
+                  mode="text"
+                  onPress={handleSubmit(onSubmit)}
+                  contentStyle={styles.buttonContent}
+                  labelStyle={styles.buttonLabel}
+                  disabled={loading}
+                >
+                  {loading ? <ActivityIndicator color={colors.white} /> : 'Sign In'}
+                </Button>
+              </LinearGradient>
+
+              <View style={styles.signupContainer}>
+                <Text variant="bodyMedium" style={styles.signupText}>
+                  Don't have an account?{' '}
+                </Text>
+                <TouchableOpacity onPress={handleSignUp}>
+                  <Text style={styles.signupLink}>Sign Up</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 24,
+    padding: spacing.lg,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.gray[800],
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
   },
   header: {
-    marginTop: 40,
-    marginBottom: 40,
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  iconContainer: {
+    marginBottom: spacing.md,
+  },
+  iconGradient: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.md,
   },
   title: {
-    fontWeight: 'bold',
-    color: '#2196F3',
-    marginBottom: 8,
+    fontWeight: '800',
+    color: colors.white,
+    marginBottom: spacing.xs,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    color: '#666666',
+    color: colors.gray[300],
   },
-  form: {
-    flex: 1,
+  formCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    ...shadows.xl,
   },
   input: {
-    marginBottom: 8,
+    marginBottom: spacing.xs,
+    backgroundColor: colors.white,
   },
   errorText: {
-    color: '#B00020',
-    marginBottom: 12,
-    marginLeft: 12,
+    color: colors.error,
+    marginBottom: spacing.sm,
+    marginLeft: spacing.sm,
   },
   optionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
   },
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  rememberText: {
+    color: colors.gray[700],
+    marginLeft: -8,
+  },
+  forgotPasswordText: {
+    color: colors.primary,
+    fontWeight: '600',
+    fontSize: 14,
+  },
   loginButton: {
-    marginBottom: 16,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    marginBottom: spacing.md,
+    ...shadows.md,
   },
   buttonContent: {
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
+  },
+  buttonLabel: {
+    color: colors.white,
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   signupContainer: {
     flexDirection: 'row',
@@ -222,6 +320,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   signupText: {
-    color: '#666666',
+    color: colors.gray[700],
+  },
+  signupLink: {
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 14,
   },
 });
