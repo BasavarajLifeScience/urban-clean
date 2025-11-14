@@ -73,18 +73,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const register = async (data: RegisterRequest) => {
+    console.log('🔐 [AuthContext] register() called');
+    console.log('📤 [AuthContext] Register request data:', {
+      fullName: data.fullName,
+      phoneNumber: data.phoneNumber,
+      email: data.email,
+      role: data.role,
+      hasPassword: !!data.password,
+    });
+
     try {
+      console.log('⏳ [AuthContext] Calling authApi.register...');
       const response = await authApi.register(data);
 
+      console.log('📥 [AuthContext] Raw API response:', response);
+
       if (response.success && response.data) {
+        console.log('✅ [AuthContext] Registration API call successful');
+        console.log('📥 [AuthContext] Response data:', {
+          userId: response.data.userId,
+          hasOtp: !!response.data.otp,
+          otp: response.data.otp, // Only in development
+        });
+
         return {
           userId: response.data.userId,
           otp: response.data.otp, // Only in development
         };
       } else {
+        console.error('❌ [AuthContext] API returned success=false');
+        console.error('❌ [AuthContext] Response:', response);
         throw new Error(response.message || 'Registration failed');
       }
     } catch (error: any) {
+      console.error('❌ [AuthContext] Registration error caught:', error);
+      console.error('❌ [AuthContext] Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+      });
       throw new Error(error.response?.data?.message || error.message || 'Registration failed');
     }
   };

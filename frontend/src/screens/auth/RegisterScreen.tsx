@@ -51,31 +51,63 @@ export const RegisterScreen = () => {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
+    console.log('🎯 [RegisterScreen] Registration form submitted');
+    console.log('📋 [RegisterScreen] Form data:', {
+      fullName: data.fullName,
+      phoneNumber: data.phoneNumber,
+      email: data.email,
+      role: selectedRole,
+      hasPassword: !!data.password,
+      passwordsMatch: data.password === data.confirmPassword,
+      acceptedTerms,
+    });
+
     if (!acceptedTerms) {
+      console.log('❌ [RegisterScreen] Terms not accepted');
       Alert.alert('Terms Required', 'Please accept the Terms and Conditions to continue.');
       return;
     }
 
     try {
       setLoading(true);
+      console.log('🚀 [RegisterScreen] Starting registration request...');
+
       const { confirmPassword, ...registerData } = data;
-      await registerUser({
+      const requestPayload = {
         ...registerData,
         role: selectedRole,
-      });
+      };
+
+      console.log('📤 [RegisterScreen] Request payload:', requestPayload);
+
+      const result = await registerUser(requestPayload);
+
+      console.log('✅ [RegisterScreen] Registration successful!');
+      console.log('📥 [RegisterScreen] Response:', result);
+
       // Navigate to OTP screen
+      console.log('🔄 [RegisterScreen] Navigating to OTP verification screen');
       navigation.navigate('OTPVerification', {
         phoneNumber: data.phoneNumber,
         email: data.email,
       });
     } catch (error: any) {
+      console.error('❌ [RegisterScreen] Registration failed:', error);
+      console.error('❌ [RegisterScreen] Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+      });
+
       Alert.alert(
         'Registration Failed',
-        error.response?.data?.message || 'Unable to create account. Please try again.',
+        error.response?.data?.message || error.message || 'Unable to create account. Please try again.',
         [{ text: 'OK' }]
       );
     } finally {
       setLoading(false);
+      console.log('🏁 [RegisterScreen] Registration flow completed (loading stopped)');
     }
   };
 
