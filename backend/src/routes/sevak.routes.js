@@ -23,6 +23,8 @@ const checkOutValidation = [
 
 // Routes
 router.get('/jobs', asyncHandler(sevakController.getJobs));
+router.get('/available-jobs', asyncHandler(sevakController.getAvailableJobs));
+router.post('/jobs/:jobId/accept', asyncHandler(sevakController.acceptJob));
 router.get('/jobs/:jobId', asyncHandler(sevakController.getJobDetails));
 router.post('/check-in', checkInValidation, validate, asyncHandler(sevakController.checkIn));
 router.post('/check-out', checkOutValidation, validate, asyncHandler(sevakController.checkOut));

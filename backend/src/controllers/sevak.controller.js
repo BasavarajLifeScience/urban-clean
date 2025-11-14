@@ -449,6 +449,116 @@ const getAttendance = async (req, res, next) => {
   }
 };
 
+/**
+ * Get available jobs (unassigned bookings)
+ */
+const getAvailableJobs = async (req, res, next) => {
+  try {
+    const sevakId = req.user.userId.toString();
+    const { page, limit, category } = req.query;
+    const { skip, limit: limitNum, page: pageNum } = getPagination(page, limit);
+
+    // Query for unassigned bookings
+    const query = {
+      $or: [
+        { sevakId: null },
+        { sevakId: { $exists: false } }
+      ],
+      status: 'pending',
+      scheduledDate: { $gte: new Date() } // Only future bookings
+    };
+
+    // Filter by category if provided
+    if (category) {
+      const Service = require('../models/Service');
+      const services = await Service.find({ category }).select('_id');
+      query.serviceId = { $in: services.map(s => s._id) };
+    }
+
+    const jobs = await Booking.find(query)
+      .populate('serviceId', '_id name category basePrice description')
+      .populate('residentId', '_id fullName phoneNumber')
+      .sort({ scheduledDate: 1, createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    const total = await Booking.countDocuments(query);
+
+    console.log(`📋 [Sevak] Available jobs for sevak ${sevakId}:`, jobs.length);
+
+    return sendSuccess(res, 200, 'Available jobs retrieved successfully', {
+      jobs,
+      pagination: {
+        currentPage: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+        totalItems: total,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Accept an available job
+ */
+const acceptJob = async (req, res, next) => {
+  try {
+    const sevakId = req.user.userId.toString();
+    const { jobId } = req.params;
+
+    console.log(`🎯 [Sevak] Attempting to accept job ${jobId} by sevak ${sevakId}`);
+
+    const booking = await Booking.findById(jobId)
+      .populate('serviceId')
+      .populate('residentId', 'fullName phoneNumber');
+
+    if (!booking) {
+      throw new NotFoundError('Job not found');
+    }
+
+    // Check if job is still available
+    if (booking.sevakId) {
+      throw new ValidationError('This job has already been assigned to another sevak');
+    }
+
+    if (booking.status !== 'pending') {
+      throw new ValidationError('This job is no longer available');
+    }
+
+    // Check if scheduled date is in the future
+    if (new Date(booking.scheduledDate) < new Date()) {
+      throw new ValidationError('Cannot accept jobs scheduled in the past');
+    }
+
+    // Assign the job to this sevak
+    booking.sevakId = sevakId;
+    booking.status = 'assigned';
+    booking.timeline.push({
+      status: 'assigned',
+      timestamp: new Date(),
+      notes: 'Job accepted by sevak',
+    });
+    await booking.save();
+
+    // Create notification for resident
+    const Notification = require('../models/Notification');
+    await Notification.create({
+      userId: booking.residentId._id,
+      type: 'booking',
+      title: 'Sevak Assigned',
+      message: `A service provider has been assigned to your booking #${booking.bookingNumber}`,
+      data: { bookingId: booking._id },
+    });
+
+    console.log(`✅ [Sevak] Job ${jobId} accepted by sevak ${sevakId}`);
+
+    return sendSuccess(res, 200, 'Job accepted successfully', { booking });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getJobs,
   getJobDetails,
@@ -460,4 +570,6 @@ module.exports = {
   getPerformance,
   getFeedback,
   getAttendance,
+  getAvailableJobs,
+  acceptJob,
 };
