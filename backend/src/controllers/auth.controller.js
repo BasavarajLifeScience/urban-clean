@@ -79,22 +79,40 @@ const verifyOTPController = async (req, res, next) => {
   try {
     const { userId, otp } = req.body;
 
+    console.log('🔐 [Auth Controller] OTP verification request');
+    console.log('👤 [Auth Controller] User ID:', userId);
+    console.log('🔢 [Auth Controller] OTP:', otp);
+
     const user = await User.findById(userId);
 
     if (!user) {
+      console.error('❌ [Auth Controller] User not found:', userId);
       throw new NotFoundError('User not found');
     }
 
+    console.log('✅ [Auth Controller] User found:', {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      isVerified: user.isVerified,
+    });
+
     // Verify OTP
+    console.log('🔍 [Auth Controller] Verifying OTP for registration type');
     const verification = await verifyOTP(userId, otp, 'registration');
+    console.log('📋 [Auth Controller] Verification result:', verification);
 
     if (!verification.valid) {
+      console.error('❌ [Auth Controller] OTP verification failed:', verification.message);
       throw new ValidationError(verification.message);
     }
+
+    console.log('✅ [Auth Controller] OTP verified successfully');
 
     // Mark user as verified
     user.isVerified = true;
     await user.save();
+    console.log('✅ [Auth Controller] User marked as verified');
 
     // Generate tokens
     const accessToken = generateAccessToken({ userId: user._id, email: user.email, role: user.role });
@@ -107,12 +125,15 @@ const verifyOTPController = async (req, res, next) => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     });
 
+    console.log('✅ [Auth Controller] Tokens generated and saved');
+
     return sendSuccess(res, 200, 'OTP verified successfully', {
       accessToken,
       refreshToken,
       user: user.toPublicJSON(),
     });
   } catch (error) {
+    console.error('❌ [Auth Controller] OTP verification error:', error.message);
     next(error);
   }
 };
