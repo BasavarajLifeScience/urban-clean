@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, Card, Button, TextInput, ActivityIndicator } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { Text, TextInput, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
 import { ratingApi } from '../../services/api';
+import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
 type RatingScreenRouteProp = RouteProp<ResidentStackParamList, 'Rating'>;
 type RatingScreenNavigationProp = NativeStackNavigationProp<ResidentStackParamList, 'Rating'>;
@@ -36,16 +39,30 @@ export const RatingScreen = () => {
     return (
       <View style={styles.starsContainer}>
         {[1, 2, 3, 4, 5].map((star) => (
-          <Text
-            key={star}
-            style={styles.star}
-            onPress={() => handleStarPress(star, setter)}
-          >
-            {star <= currentRating ? '⭐' : '☆'}
-          </Text>
+          <TouchableOpacity key={star} onPress={() => handleStarPress(star, setter)}>
+            <LinearGradient
+              colors={
+                star <= currentRating
+                  ? [colors.warning, colors.warning + 'CC']
+                  : [colors.gray[200], colors.gray[300]]
+              }
+              style={styles.starGradient}
+            >
+              <MaterialCommunityIcons
+                name={star <= currentRating ? 'star' : 'star-outline'}
+                size={32}
+                color={star <= currentRating ? colors.white : colors.gray[500]}
+              />
+            </LinearGradient>
+          </TouchableOpacity>
         ))}
       </View>
     );
+  };
+
+  const getRatingLabel = (rating: number) => {
+    const labels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+    return labels[rating] || 'Tap to rate';
   };
 
   const handleSubmit = async () => {
@@ -86,186 +103,318 @@ export const RatingScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text variant="headlineSmall" style={styles.title}>
-          Rate Your Experience
-        </Text>
-        <Text variant="bodyMedium" style={styles.subtitle}>
-          Your feedback helps us improve our services
-        </Text>
-
-        {/* Overall Rating */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.ratingLabel}>
-              Overall Rating *
-            </Text>
-            {renderStars(overallRating, setOverallRating)}
-            <Text variant="bodySmall" style={styles.ratingHint}>
-              {overallRating === 0
-                ? 'Tap to rate'
-                : overallRating === 1
-                ? 'Poor'
-                : overallRating === 2
-                ? 'Fair'
-                : overallRating === 3
-                ? 'Good'
-                : overallRating === 4
-                ? 'Very Good'
-                : 'Excellent'}
-            </Text>
-          </Card.Content>
-        </Card>
-
-        {/* Detailed Ratings */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.cardTitle}>
-              Detailed Ratings
-            </Text>
-
-            <View style={styles.detailedRating}>
-              <Text variant="bodyLarge" style={styles.detailedLabel}>
-                Quality of Work
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium, colors.backgroundLight]}
+        style={styles.gradient}
+        locations={[0, 0.3, 1]}
+      >
+        <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            {/* Header */}
+            <View style={styles.header}>
+              <Text variant="headlineMedium" style={styles.title}>
+                Rate Your Experience
               </Text>
-              {renderStars(qualityRating, setQualityRating)}
+              <Text variant="bodyMedium" style={styles.subtitle}>
+                Your feedback helps us improve our services
+              </Text>
             </View>
 
-            <View style={styles.detailedRating}>
-              <Text variant="bodyLarge" style={styles.detailedLabel}>
-                Punctuality
-              </Text>
-              {renderStars(punctualityRating, setPunctualityRating)}
+            {/* Overall Rating Card */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={[colors.white, colors.gray[50]]}
+                style={styles.cardGradient}
+              >
+                <View style={styles.cardHeader}>
+                  <LinearGradient
+                    colors={[colors.warning, colors.warning + 'CC']}
+                    style={styles.cardIcon}
+                  >
+                    <MaterialCommunityIcons name="star" size={20} color={colors.white} />
+                  </LinearGradient>
+                  <Text variant="titleMedium" style={styles.cardTitle}>
+                    Overall Rating *
+                  </Text>
+                </View>
+
+                {renderStars(overallRating, setOverallRating)}
+
+                <View style={styles.ratingLabelContainer}>
+                  <Text
+                    variant="titleMedium"
+                    style={[
+                      styles.ratingLabel,
+                      overallRating > 0 && { color: colors.warning },
+                    ]}
+                  >
+                    {getRatingLabel(overallRating)}
+                  </Text>
+                </View>
+              </LinearGradient>
             </View>
 
-            <View style={styles.detailedRating}>
-              <Text variant="bodyLarge" style={styles.detailedLabel}>
-                Professionalism
-              </Text>
-              {renderStars(professionalismRating, setProfessionalismRating)}
+            {/* Detailed Ratings Card */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={[colors.white, colors.gray[50]]}
+                style={styles.cardGradient}
+              >
+                <View style={styles.cardHeader}>
+                  <LinearGradient
+                    colors={[colors.primary, colors.primaryDark]}
+                    style={styles.cardIcon}
+                  >
+                    <MaterialCommunityIcons name="star-half-full" size={20} color={colors.white} />
+                  </LinearGradient>
+                  <Text variant="titleMedium" style={styles.cardTitle}>
+                    Detailed Ratings
+                  </Text>
+                </View>
+
+                <View style={styles.detailedRating}>
+                  <View style={styles.detailedHeader}>
+                    <MaterialCommunityIcons name="quality-high" size={18} color={colors.primary} />
+                    <Text variant="bodyLarge" style={styles.detailedLabel}>
+                      Quality of Work
+                    </Text>
+                  </View>
+                  {renderStars(qualityRating, setQualityRating)}
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.detailedRating}>
+                  <View style={styles.detailedHeader}>
+                    <MaterialCommunityIcons name="clock-check" size={18} color={colors.primary} />
+                    <Text variant="bodyLarge" style={styles.detailedLabel}>
+                      Punctuality
+                    </Text>
+                  </View>
+                  {renderStars(punctualityRating, setPunctualityRating)}
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.detailedRating}>
+                  <View style={styles.detailedHeader}>
+                    <MaterialCommunityIcons name="account-tie" size={18} color={colors.primary} />
+                    <Text variant="bodyLarge" style={styles.detailedLabel}>
+                      Professionalism
+                    </Text>
+                  </View>
+                  {renderStars(professionalismRating, setProfessionalismRating)}
+                </View>
+              </LinearGradient>
             </View>
-          </Card.Content>
-        </Card>
 
-        {/* Written Review */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.cardTitle}>
-              Write a Review (Optional)
-            </Text>
+            {/* Written Review Card */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={[colors.white, colors.gray[50]]}
+                style={styles.cardGradient}
+              >
+                <View style={styles.cardHeader}>
+                  <LinearGradient
+                    colors={[colors.secondary, colors.secondaryDark]}
+                    style={styles.cardIcon}
+                  >
+                    <MaterialCommunityIcons name="text-box" size={20} color={colors.white} />
+                  </LinearGradient>
+                  <Text variant="titleMedium" style={styles.cardTitle}>
+                    Write a Review (Optional)
+                  </Text>
+                </View>
 
-            <TextInput
-              mode="outlined"
-              value={review}
-              onChangeText={setReview}
-              multiline
-              numberOfLines={6}
-              placeholder="Share details about your experience..."
-              style={styles.textArea}
-            />
+                <TextInput
+                  mode="outlined"
+                  value={review}
+                  onChangeText={setReview}
+                  multiline
+                  numberOfLines={6}
+                  placeholder="Share details about your experience..."
+                  style={styles.textArea}
+                  outlineColor={colors.gray[300]}
+                  activeOutlineColor={colors.primary}
+                />
 
-            <Text variant="bodySmall" style={styles.reviewHint}>
-              Your review will be visible to other users and help them make informed decisions.
-            </Text>
-          </Card.Content>
-        </Card>
-      </ScrollView>
+                <View style={styles.reviewHintContainer}>
+                  <MaterialCommunityIcons name="information-outline" size={16} color={colors.gray[500]} />
+                  <Text variant="bodySmall" style={styles.reviewHint}>
+                    Your review will be visible to other users and help them make informed decisions.
+                  </Text>
+                </View>
+              </LinearGradient>
+            </View>
 
-      {/* Submit Button */}
-      <View style={styles.bottomBar}>
-        <Button
-          mode="contained"
-          onPress={handleSubmit}
-          disabled={submitting || overallRating === 0}
-          style={styles.submitButton}
-          contentStyle={styles.submitButtonContent}
-        >
-          {submitting ? <ActivityIndicator color="#FFFFFF" /> : 'Submit Rating'}
-        </Button>
-      </View>
-    </SafeAreaView>
+            <View style={{ height: 100 }} />
+          </ScrollView>
+
+          {/* Submit Button */}
+          <View style={styles.bottomBar}>
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={handleSubmit}
+              disabled={submitting || overallRating === 0}
+            >
+              <LinearGradient
+                colors={
+                  submitting || overallRating === 0
+                    ? [colors.gray[400], colors.gray[500]]
+                    : [colors.primary, colors.primaryDark]
+                }
+                style={styles.submitButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                {submitting ? (
+                  <ActivityIndicator color={colors.white} />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="send" size={20} color={colors.white} />
+                    <Text style={styles.submitButtonText}>Submit Rating</Text>
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 100,
+    padding: spacing.lg,
+    paddingBottom: 120,
+  },
+  header: {
+    marginBottom: spacing.xl,
   },
   title: {
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 8,
+    fontWeight: '800',
+    color: colors.white,
+    marginBottom: spacing.xs,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    color: '#666666',
-    marginBottom: 24,
+    color: colors.gray[300],
   },
   card: {
-    marginBottom: 16,
-    elevation: 2,
+    marginBottom: spacing.md,
+  },
+  cardGradient: {
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    ...shadows.md,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  cardIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
   },
   cardTitle: {
-    fontWeight: '600',
-    color: '#333333',
-    marginBottom: 16,
-  },
-  ratingLabel: {
-    fontWeight: '600',
-    color: '#333333',
-    marginBottom: 12,
-    textAlign: 'center',
+    fontWeight: '700',
+    color: colors.gray[900],
   },
   starsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
-    marginBottom: 8,
+    gap: spacing.sm,
+    marginVertical: spacing.md,
   },
-  star: {
-    fontSize: 40,
+  starGradient: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.sm,
   },
-  ratingHint: {
-    textAlign: 'center',
-    color: '#666666',
-    marginTop: 4,
+  ratingLabelContainer: {
+    alignItems: 'center',
+  },
+  ratingLabel: {
+    color: colors.gray[600],
+    fontWeight: '600',
   },
   detailedRating: {
-    marginBottom: 20,
+    marginBottom: spacing.md,
+  },
+  detailedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   detailedLabel: {
-    color: '#333333',
-    marginBottom: 8,
+    color: colors.gray[900],
+    fontWeight: '600',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.gray[300],
+    marginVertical: spacing.md,
   },
   textArea: {
-    marginBottom: 12,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.white,
+    minHeight: 120,
+  },
+  reviewHintContainer: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.xs,
   },
   reviewHint: {
-    color: '#999999',
-    fontStyle: 'italic',
+    flex: 1,
+    color: colors.gray[500],
+    lineHeight: 18,
   },
   bottomBar: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    backgroundColor: colors.white,
+    padding: spacing.lg,
+    ...shadows.lg,
   },
   submitButton: {
     width: '100%',
   },
-  submitButtonContent: {
-    paddingVertical: 8,
+  submitButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.lg,
+    gap: spacing.sm,
+    ...shadows.md,
+  },
+  submitButtonText: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 16,
   },
 });

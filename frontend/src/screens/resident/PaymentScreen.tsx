@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, Card, Button, RadioButton, Divider, ActivityIndicator } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { Text, ActivityIndicator, RadioButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
 import { bookingApi, paymentApi } from '../../services/api';
 import { Booking } from '../../types';
+import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
 type PaymentScreenRouteProp = RouteProp<ResidentStackParamList, 'Payment'>;
 type PaymentScreenNavigationProp = NativeStackNavigationProp<ResidentStackParamList, 'Payment'>;
@@ -115,247 +118,422 @@ export const PaymentScreen = () => {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2196F3" />
-      </View>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium]}
+        style={styles.centered}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </LinearGradient>
     );
   }
 
   if (!booking) {
     return (
-      <View style={styles.centered}>
-        <Text variant="titleMedium">Booking not found</Text>
-      </View>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium]}
+        style={styles.centered}
+      >
+        <MaterialCommunityIcons name="alert-circle" size={64} color={colors.gray[400]} />
+        <Text variant="titleMedium" style={styles.errorText}>Booking not found</Text>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Booking Summary */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.cardTitle}>
-              Booking Summary
-            </Text>
-
-            <View style={styles.summaryRow}>
-              <Text variant="bodyLarge">Booking ID</Text>
-              <Text variant="bodyLarge" style={styles.summaryValue}>
-                #{booking.bookingNumber}
-              </Text>
-            </View>
-
-            <View style={styles.summaryRow}>
-              <Text variant="bodyLarge">Service</Text>
-              <Text variant="bodyLarge" style={styles.summaryValue}>
-                {booking.service?.name}
-              </Text>
-            </View>
-
-            <View style={styles.summaryRow}>
-              <Text variant="bodyLarge">Date</Text>
-              <Text variant="bodyLarge" style={styles.summaryValue}>
-                {new Date(booking.scheduledDate).toLocaleDateString('en-IN', {
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </Text>
-            </View>
-
-            {booking.scheduledTime && (
-              <View style={styles.summaryRow}>
-                <Text variant="bodyLarge">Time</Text>
-                <Text variant="bodyLarge" style={styles.summaryValue}>
-                  {booking.scheduledTime}
-                </Text>
-              </View>
-            )}
-          </Card.Content>
-        </Card>
-
-        {/* Payment Method */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.cardTitle}>
-              Payment Method
-            </Text>
-
-            <RadioButton.Group onValueChange={(value) => setPaymentMethod(value as 'online' | 'cod')} value={paymentMethod}>
-              <View style={styles.radioItem}>
-                <View style={styles.radioContent}>
-                  <Text variant="titleSmall">💳 Online Payment (Razorpay)</Text>
-                  <Text variant="bodySmall" style={styles.radioDescription}>
-                    Pay securely using UPI, Cards, Net Banking, or Wallets
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium, colors.backgroundLight]}
+        style={styles.gradient}
+        locations={[0, 0.3, 1]}
+      >
+        <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            {/* Booking Summary Card */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={[colors.white, colors.gray[50]]}
+                style={styles.cardGradient}
+              >
+                <View style={styles.cardHeader}>
+                  <LinearGradient
+                    colors={[colors.primary, colors.primaryDark]}
+                    style={styles.cardIcon}
+                  >
+                    <MaterialCommunityIcons name="receipt-text" size={20} color={colors.white} />
+                  </LinearGradient>
+                  <Text variant="titleMedium" style={styles.cardTitle}>
+                    Booking Summary
                   </Text>
                 </View>
-                <RadioButton value="online" />
-              </View>
 
-              <Divider style={styles.divider} />
-
-              <View style={styles.radioItem}>
-                <View style={styles.radioContent}>
-                  <Text variant="titleSmall">💵 Cash on Service</Text>
-                  <Text variant="bodySmall" style={styles.radioDescription}>
-                    Pay the service provider in cash after completion
+                <View style={styles.summaryRow}>
+                  <Text variant="bodyMedium" style={styles.summaryLabel}>Booking ID</Text>
+                  <Text variant="bodyMedium" style={styles.summaryValue}>
+                    #{booking.bookingNumber}
                   </Text>
                 </View>
-                <RadioButton value="cod" />
-              </View>
-            </RadioButton.Group>
-          </Card.Content>
-        </Card>
 
-        {/* Payment Summary */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.cardTitle}>
-              Payment Details
-            </Text>
+                <View style={styles.summaryRow}>
+                  <Text variant="bodyMedium" style={styles.summaryLabel}>Service</Text>
+                  <Text variant="bodyMedium" style={styles.summaryValue} numberOfLines={1}>
+                    {booking.service?.name}
+                  </Text>
+                </View>
 
-            <View style={styles.paymentRow}>
-              <Text variant="bodyLarge">Service Charge</Text>
-              <Text variant="bodyLarge">₹{booking.totalAmount.toFixed(2)}</Text>
+                <View style={styles.summaryRow}>
+                  <Text variant="bodyMedium" style={styles.summaryLabel}>Date</Text>
+                  <Text variant="bodyMedium" style={styles.summaryValue}>
+                    {new Date(booking.scheduledDate).toLocaleDateString('en-IN', {
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </Text>
+                </View>
+
+                {booking.scheduledTime && (
+                  <View style={styles.summaryRow}>
+                    <Text variant="bodyMedium" style={styles.summaryLabel}>Time</Text>
+                    <Text variant="bodyMedium" style={styles.summaryValue}>
+                      {booking.scheduledTime}
+                    </Text>
+                  </View>
+                )}
+              </LinearGradient>
             </View>
 
-            <View style={styles.paymentRow}>
-              <Text variant="bodyMedium" style={styles.taxLabel}>
-                (Including all taxes)
-              </Text>
+            {/* Payment Method Card */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={[colors.white, colors.gray[50]]}
+                style={styles.cardGradient}
+              >
+                <View style={styles.cardHeader}>
+                  <LinearGradient
+                    colors={[colors.info, colors.info + 'CC']}
+                    style={styles.cardIcon}
+                  >
+                    <MaterialCommunityIcons name="credit-card" size={20} color={colors.white} />
+                  </LinearGradient>
+                  <Text variant="titleMedium" style={styles.cardTitle}>
+                    Payment Method
+                  </Text>
+                </View>
+
+                <RadioButton.Group
+                  onValueChange={(value) => setPaymentMethod(value as 'online' | 'cod')}
+                  value={paymentMethod}
+                >
+                  <TouchableOpacity
+                    style={styles.radioItem}
+                    onPress={() => setPaymentMethod('online')}
+                  >
+                    <View style={styles.radioContent}>
+                      <LinearGradient
+                        colors={[colors.primary, colors.primaryDark]}
+                        style={styles.radioIcon}
+                      >
+                        <MaterialCommunityIcons name="credit-card-outline" size={20} color={colors.white} />
+                      </LinearGradient>
+                      <View style={styles.radioTextContent}>
+                        <Text variant="titleSmall" style={styles.radioTitle}>
+                          Online Payment (Razorpay)
+                        </Text>
+                        <Text variant="bodySmall" style={styles.radioDescription}>
+                          Pay securely using UPI, Cards, Net Banking, or Wallets
+                        </Text>
+                      </View>
+                    </View>
+                    <RadioButton value="online" color={colors.primary} />
+                  </TouchableOpacity>
+
+                  <View style={styles.divider} />
+
+                  <TouchableOpacity
+                    style={styles.radioItem}
+                    onPress={() => setPaymentMethod('cod')}
+                  >
+                    <View style={styles.radioContent}>
+                      <LinearGradient
+                        colors={[colors.success, colors.success + 'CC']}
+                        style={styles.radioIcon}
+                      >
+                        <MaterialCommunityIcons name="cash" size={20} color={colors.white} />
+                      </LinearGradient>
+                      <View style={styles.radioTextContent}>
+                        <Text variant="titleSmall" style={styles.radioTitle}>
+                          Cash on Service
+                        </Text>
+                        <Text variant="bodySmall" style={styles.radioDescription}>
+                          Pay the service provider in cash after completion
+                        </Text>
+                      </View>
+                    </View>
+                    <RadioButton value="cod" color={colors.primary} />
+                  </TouchableOpacity>
+                </RadioButton.Group>
+              </LinearGradient>
             </View>
 
-            <Divider style={styles.divider} />
+            {/* Payment Details Card */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={[colors.white, colors.gray[50]]}
+                style={styles.cardGradient}
+              >
+                <View style={styles.cardHeader}>
+                  <LinearGradient
+                    colors={[colors.success, colors.success + 'CC']}
+                    style={styles.cardIcon}
+                  >
+                    <MaterialCommunityIcons name="currency-inr" size={20} color={colors.white} />
+                  </LinearGradient>
+                  <Text variant="titleMedium" style={styles.cardTitle}>
+                    Payment Details
+                  </Text>
+                </View>
 
-            <View style={styles.totalRow}>
-              <Text variant="titleLarge" style={styles.totalLabel}>
-                Total Amount
+                <View style={styles.paymentRow}>
+                  <Text variant="bodyLarge" style={styles.paymentLabel}>Service Charge</Text>
+                  <Text variant="bodyLarge" style={styles.paymentValue}>
+                    ₹{booking.totalAmount.toFixed(2)}
+                  </Text>
+                </View>
+
+                <View style={styles.taxRow}>
+                  <Text variant="bodySmall" style={styles.taxLabel}>
+                    (Including all taxes)
+                  </Text>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.totalRow}>
+                  <Text variant="titleLarge" style={styles.totalLabel}>
+                    Total Amount
+                  </Text>
+                  <Text variant="titleLarge" style={styles.totalAmount}>
+                    ₹{booking.totalAmount.toFixed(2)}
+                  </Text>
+                </View>
+              </LinearGradient>
+            </View>
+
+            {/* Info Card */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={[colors.info + '15', colors.info + '10']}
+                style={styles.infoCardGradient}
+              >
+                <View style={styles.infoContent}>
+                  <MaterialCommunityIcons name="information" size={20} color={colors.info} />
+                  <Text variant="bodyMedium" style={styles.infoText}>
+                    Your payment is secure and encrypted. We use Razorpay for processing all online payments.
+                  </Text>
+                </View>
+              </LinearGradient>
+            </View>
+
+            <View style={{ height: 100 }} />
+          </ScrollView>
+
+          {/* Bottom Action */}
+          <View style={styles.bottomBar}>
+            <View style={styles.bottomLeft}>
+              <Text variant="labelMedium" style={styles.bottomLabel}>
+                Amount to Pay
               </Text>
-              <Text variant="titleLarge" style={styles.totalAmount}>
+              <Text variant="headlineSmall" style={styles.bottomAmount}>
                 ₹{booking.totalAmount.toFixed(2)}
               </Text>
             </View>
-          </Card.Content>
-        </Card>
-
-        {/* Payment Info */}
-        <Card style={styles.infoCard}>
-          <Card.Content>
-            <Text variant="bodyMedium" style={styles.infoText}>
-              ℹ️ Your payment is secure and encrypted. We use Razorpay for processing all online payments.
-            </Text>
-          </Card.Content>
-        </Card>
-      </ScrollView>
-
-      {/* Bottom Action */}
-      <View style={styles.bottomBar}>
-        <View style={styles.bottomLeft}>
-          <Text variant="labelMedium" style={styles.bottomLabel}>
-            Amount to Pay
-          </Text>
-          <Text variant="headlineSmall" style={styles.bottomAmount}>
-            ₹{booking.totalAmount.toFixed(2)}
-          </Text>
-        </View>
-        <Button
-          mode="contained"
-          onPress={handlePayment}
-          disabled={processing}
-          style={styles.payButton}
-          contentStyle={styles.payButtonContent}
-        >
-          {processing ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : paymentMethod === 'online' ? (
-            'Pay Now'
-          ) : (
-            'Confirm'
-          )}
-        </Button>
-      </View>
-    </SafeAreaView>
+            <TouchableOpacity
+              style={styles.payButton}
+              onPress={handlePayment}
+              disabled={processing}
+            >
+              <LinearGradient
+                colors={processing ? [colors.gray[400], colors.gray[500]] : [colors.primary, colors.primaryDark]}
+                style={styles.payButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                {processing ? (
+                  <ActivityIndicator color={colors.white} />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons
+                      name={paymentMethod === 'online' ? 'credit-card' : 'cash'}
+                      size={20}
+                      color={colors.white}
+                    />
+                    <Text style={styles.payButtonText}>
+                      {paymentMethod === 'online' ? 'Pay Now' : 'Confirm'}
+                    </Text>
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: spacing.md,
+    color: colors.gray[300],
+    fontSize: 16,
+  },
+  errorText: {
+    marginTop: spacing.md,
+    color: colors.gray[400],
+    fontSize: 16,
+  },
   scrollContent: {
-    padding: 16,
+    padding: spacing.lg,
     paddingBottom: 120,
   },
   card: {
-    marginBottom: 16,
-    elevation: 2,
+    marginBottom: spacing.md,
+  },
+  cardGradient: {
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    ...shadows.md,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  cardIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
   },
   cardTitle: {
-    fontWeight: '600',
-    color: '#333333',
-    marginBottom: 16,
+    fontWeight: '700',
+    color: colors.gray[900],
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  summaryLabel: {
+    color: colors.gray[600],
+    flex: 1,
   },
   summaryValue: {
+    color: colors.gray[900],
     fontWeight: '600',
-    color: '#333333',
+    flex: 1,
+    textAlign: 'right',
   },
   radioItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: spacing.sm,
   },
   radioContent: {
     flex: 1,
-    marginRight: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  radioIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  radioTextContent: {
+    flex: 1,
+  },
+  radioTitle: {
+    color: colors.gray[900],
+    fontWeight: '700',
+    marginBottom: 2,
   },
   radioDescription: {
-    color: '#666666',
-    marginTop: 4,
+    color: colors.gray[600],
+    lineHeight: 18,
   },
   divider: {
-    marginVertical: 8,
+    height: 1,
+    backgroundColor: colors.gray[300],
+    marginVertical: spacing.md,
   },
   paymentRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: spacing.xs,
+  },
+  paymentLabel: {
+    color: colors.gray[700],
+  },
+  paymentValue: {
+    color: colors.gray[900],
+    fontWeight: '600',
+  },
+  taxRow: {
+    flexDirection: 'row',
+    marginBottom: spacing.sm,
   },
   taxLabel: {
-    color: '#999999',
+    color: colors.gray[500],
     fontStyle: 'italic',
   },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 8,
   },
   totalLabel: {
-    fontWeight: 'bold',
-    color: '#333333',
+    fontWeight: '800',
+    color: colors.gray[900],
   },
   totalAmount: {
-    fontWeight: 'bold',
-    color: '#2196F3',
+    fontWeight: '800',
+    color: colors.primary,
   },
-  infoCard: {
-    backgroundColor: '#E3F2FD',
-    elevation: 0,
+  infoCardGradient: {
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.info + '30',
+  },
+  infoContent: {
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
   infoText: {
-    color: '#1565C0',
+    flex: 1,
+    color: colors.info,
     lineHeight: 20,
   },
   bottomBar: {
@@ -363,33 +541,39 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
-    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    padding: spacing.lg,
+    backgroundColor: colors.white,
+    ...shadows.lg,
   },
   bottomLeft: {
     flex: 1,
   },
   bottomLabel: {
-    color: '#666666',
-    marginBottom: 4,
+    color: colors.gray[600],
+    marginBottom: 2,
   },
   bottomAmount: {
-    color: '#2196F3',
-    fontWeight: 'bold',
+    color: colors.primary,
+    fontWeight: '800',
   },
   payButton: {
-    marginLeft: 16,
+    marginLeft: spacing.md,
   },
-  payButtonContent: {
-    paddingVertical: 8,
-    paddingHorizontal: 24,
+  payButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    borderRadius: borderRadius.lg,
+    gap: spacing.sm,
+    ...shadows.md,
+  },
+  payButtonText: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 16,
   },
 });

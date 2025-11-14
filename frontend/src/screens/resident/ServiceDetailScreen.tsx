@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Image, Alert } from 'react-native';
-import { Text, Button, Chip, Divider, ActivityIndicator, IconButton } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Image, Alert, TouchableOpacity } from 'react-native';
+import { Text, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
 import { serviceApi } from '../../services/api';
 import { Service } from '../../types';
+import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
 type ServiceDetailScreenRouteProp = RouteProp<ResidentStackParamList, 'ServiceDetail'>;
 type ServiceDetailScreenNavigationProp = NativeStackNavigationProp<ResidentStackParamList, 'ServiceDetail'>;
@@ -62,317 +65,491 @@ export const ServiceDetailScreen = () => {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2196F3" />
-      </View>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium]}
+        style={styles.centered}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Loading details...</Text>
+      </LinearGradient>
     );
   }
 
   if (!service) {
     return (
-      <View style={styles.centered}>
-        <Text variant="titleMedium">Service not found</Text>
-      </View>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium]}
+        style={styles.centered}
+      >
+        <MaterialCommunityIcons name="alert-circle" size={64} color={colors.gray[400]} />
+        <Text variant="titleMedium" style={styles.errorText}>Service not found</Text>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView>
-        {/* Service Image */}
-        {service.imageUrl ? (
-          <Image source={{ uri: service.imageUrl }} style={styles.image} />
-        ) : (
-          <View style={[styles.image, styles.placeholderImage]}>
-            <Text variant="headlineLarge">📋</Text>
-          </View>
-        )}
-
-        {/* Favorite Button */}
-        <IconButton
-          icon={isFavorite ? 'heart' : 'heart-outline'}
-          iconColor={isFavorite ? '#F44336' : '#666666'}
-          size={28}
-          style={styles.favoriteButton}
-          onPress={handleToggleFavorite}
-        />
-
-        <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.titleRow}>
-              <Text variant="headlineSmall" style={styles.title}>
-                {service.name}
-              </Text>
-              {service.category && (
-                <Chip mode="outlined" style={styles.categoryChip}>
-                  {service.category}
-                </Chip>
-              )}
-            </View>
-
-            {service.averageRating !== undefined && service.averageRating > 0 && (
-              <View style={styles.ratingRow}>
-                <Text variant="titleMedium" style={styles.rating}>
-                  ⭐ {service.averageRating.toFixed(1)}
-                </Text>
-                {service.totalRatings && (
-                  <Text variant="bodyMedium" style={styles.ratingCount}>
-                    ({service.totalRatings} reviews)
-                  </Text>
-                )}
-              </View>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium, colors.backgroundLight]}
+        style={styles.gradient}
+        locations={[0, 0.3, 1]}
+      >
+        <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {/* Service Image */}
+            {service.imageUrl ? (
+              <Image source={{ uri: service.imageUrl }} style={styles.image} />
+            ) : (
+              <LinearGradient
+                colors={[colors.primary, colors.primaryDark]}
+                style={styles.placeholderImage}
+              >
+                <MaterialCommunityIcons name="room-service-outline" size={64} color={colors.white} />
+              </LinearGradient>
             )}
-          </View>
 
-          <Divider style={styles.divider} />
+            {/* Favorite Button */}
+            <TouchableOpacity style={styles.favoriteButton} onPress={handleToggleFavorite}>
+              <LinearGradient
+                colors={isFavorite ? [colors.error, colors.error] : [colors.white, colors.white]}
+                style={styles.favoriteGradient}
+              >
+                <MaterialCommunityIcons
+                  name={isFavorite ? 'heart' : 'heart-outline'}
+                  size={24}
+                  color={isFavorite ? colors.white : colors.error}
+                />
+              </LinearGradient>
+            </TouchableOpacity>
 
-          {/* Price */}
-          <View style={styles.section}>
-            <Text variant="labelLarge" style={styles.sectionLabel}>
-              Price
-            </Text>
-            <View style={styles.priceContainer}>
-              <Text variant="headlineMedium" style={styles.price}>
-                ₹{service.basePrice}
-              </Text>
-              <Text variant="bodyMedium" style={styles.priceUnit}>
-                {service.pricingModel || 'per service'}
-              </Text>
-            </View>
-          </View>
+            <View style={styles.content}>
+              {/* Header Card */}
+              <View style={styles.headerCard}>
+                <LinearGradient
+                  colors={[colors.white, colors.gray[50]]}
+                  style={styles.headerCardGradient}
+                >
+                  <View style={styles.headerTop}>
+                    <View style={styles.headerLeft}>
+                      <Text variant="headlineSmall" style={styles.title}>
+                        {service.name}
+                      </Text>
+                      {service.category && (
+                        <View style={styles.categoryBadge}>
+                          <Text style={styles.categoryBadgeText}>{service.category}</Text>
+                        </View>
+                      )}
+                    </View>
+                    {service.averageRating !== undefined && service.averageRating > 0 && (
+                      <View style={styles.ratingContainer}>
+                        <MaterialCommunityIcons name="star" size={20} color={colors.warning} />
+                        <Text variant="titleMedium" style={styles.rating}>
+                          {service.averageRating.toFixed(1)}
+                        </Text>
+                        {service.totalRatings && (
+                          <Text variant="bodySmall" style={styles.ratingCount}>
+                            ({service.totalRatings})
+                          </Text>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                </LinearGradient>
+              </View>
 
-          <Divider style={styles.divider} />
-
-          {/* Description */}
-          <View style={styles.section}>
-            <Text variant="labelLarge" style={styles.sectionLabel}>
-              Description
-            </Text>
-            <Text variant="bodyLarge" style={styles.description}>
-              {service.description}
-            </Text>
-          </View>
-
-          {/* Features */}
-          {service.features && service.features.length > 0 && (
-            <>
-              <Divider style={styles.divider} />
-              <View style={styles.section}>
-                <Text variant="labelLarge" style={styles.sectionLabel}>
-                  What's Included
-                </Text>
-                {service.features.map((feature, index) => (
-                  <View key={index} style={styles.featureItem}>
-                    <Text style={styles.featureBullet}>✓</Text>
-                    <Text variant="bodyMedium" style={styles.featureText}>
-                      {feature}
+              {/* Price Card */}
+              <View style={styles.card}>
+                <LinearGradient
+                  colors={[colors.white, colors.gray[50]]}
+                  style={styles.cardGradient}
+                >
+                  <View style={styles.cardHeader}>
+                    <LinearGradient
+                      colors={[colors.success, colors.success + 'CC']}
+                      style={styles.cardIcon}
+                    >
+                      <MaterialCommunityIcons name="currency-inr" size={20} color={colors.white} />
+                    </LinearGradient>
+                    <Text variant="titleMedium" style={styles.cardTitle}>
+                      Pricing
                     </Text>
                   </View>
-                ))}
+                  <View style={styles.priceRow}>
+                    <Text variant="headlineMedium" style={styles.price}>
+                      ₹{service.basePrice}
+                    </Text>
+                    <Text variant="bodyMedium" style={styles.priceUnit}>
+                      {service.pricingModel || 'per service'}
+                    </Text>
+                  </View>
+                </LinearGradient>
               </View>
-            </>
-          )}
 
-          {/* Duration */}
-          {service.estimatedDuration && (
-            <>
-              <Divider style={styles.divider} />
-              <View style={styles.section}>
-                <Text variant="labelLarge" style={styles.sectionLabel}>
-                  Duration
-                </Text>
-                <Text variant="bodyLarge" style={styles.infoText}>
-                  Approximately {service.estimatedDuration} minutes
-                </Text>
-              </View>
-            </>
-          )}
-
-          {/* Availability */}
-          {service.isAvailable !== undefined && (
-            <>
-              <Divider style={styles.divider} />
-              <View style={styles.section}>
-                <Text variant="labelLarge" style={styles.sectionLabel}>
-                  Availability
-                </Text>
-                <Chip
-                  mode="flat"
-                  style={{
-                    backgroundColor: service.isAvailable ? '#4CAF50' : '#F44336',
-                    alignSelf: 'flex-start',
-                  }}
-                  textStyle={{ color: '#FFFFFF' }}
+              {/* Description Card */}
+              <View style={styles.card}>
+                <LinearGradient
+                  colors={[colors.white, colors.gray[50]]}
+                  style={styles.cardGradient}
                 >
-                  {service.isAvailable ? 'Available' : 'Currently Unavailable'}
-                </Chip>
+                  <View style={styles.cardHeader}>
+                    <LinearGradient
+                      colors={[colors.info, colors.info + 'CC']}
+                      style={styles.cardIcon}
+                    >
+                      <MaterialCommunityIcons name="information" size={20} color={colors.white} />
+                    </LinearGradient>
+                    <Text variant="titleMedium" style={styles.cardTitle}>
+                      Description
+                    </Text>
+                  </View>
+                  <Text variant="bodyLarge" style={styles.description}>
+                    {service.description}
+                  </Text>
+                </LinearGradient>
               </View>
-            </>
-          )}
-        </View>
-      </ScrollView>
 
-      {/* Bottom Action Button */}
-      <View style={styles.bottomBar}>
-        <View style={styles.bottomPriceContainer}>
-          <Text variant="labelMedium" style={styles.bottomPriceLabel}>
-            Starting from
-          </Text>
-          <Text variant="headlineSmall" style={styles.bottomPrice}>
-            ₹{service.basePrice}
-          </Text>
-        </View>
-        <Button
-          mode="contained"
-          onPress={handleBookService}
-          style={styles.bookButton}
-          contentStyle={styles.bookButtonContent}
-          disabled={!service.isAvailable}
-        >
-          Book Service
-        </Button>
-      </View>
-    </SafeAreaView>
+              {/* Features Card */}
+              {service.features && service.features.length > 0 && (
+                <View style={styles.card}>
+                  <LinearGradient
+                    colors={[colors.white, colors.gray[50]]}
+                    style={styles.cardGradient}
+                  >
+                    <View style={styles.cardHeader}>
+                      <LinearGradient
+                        colors={[colors.secondary, colors.secondaryDark]}
+                        style={styles.cardIcon}
+                      >
+                        <MaterialCommunityIcons name="check-all" size={20} color={colors.white} />
+                      </LinearGradient>
+                      <Text variant="titleMedium" style={styles.cardTitle}>
+                        What's Included
+                      </Text>
+                    </View>
+                    {service.features.map((feature, index) => (
+                      <View key={index} style={styles.featureItem}>
+                        <MaterialCommunityIcons
+                          name="check-circle"
+                          size={18}
+                          color={colors.success}
+                        />
+                        <Text variant="bodyMedium" style={styles.featureText}>
+                          {feature}
+                        </Text>
+                      </View>
+                    ))}
+                  </LinearGradient>
+                </View>
+              )}
+
+              {/* Duration Card */}
+              {service.estimatedDuration && (
+                <View style={styles.card}>
+                  <LinearGradient
+                    colors={[colors.white, colors.gray[50]]}
+                    style={styles.cardGradient}
+                  >
+                    <View style={styles.cardHeader}>
+                      <LinearGradient
+                        colors={[colors.warning, colors.warning + 'CC']}
+                        style={styles.cardIcon}
+                      >
+                        <MaterialCommunityIcons name="clock-outline" size={20} color={colors.white} />
+                      </LinearGradient>
+                      <Text variant="titleMedium" style={styles.cardTitle}>
+                        Duration
+                      </Text>
+                    </View>
+                    <Text variant="bodyLarge" style={styles.infoText}>
+                      Approximately {service.estimatedDuration} minutes
+                    </Text>
+                  </LinearGradient>
+                </View>
+              )}
+
+              {/* Availability Card */}
+              {service.isAvailable !== undefined && (
+                <View style={styles.card}>
+                  <LinearGradient
+                    colors={[colors.white, colors.gray[50]]}
+                    style={styles.cardGradient}
+                  >
+                    <View style={styles.cardHeader}>
+                      <LinearGradient
+                        colors={service.isAvailable ? [colors.success, colors.success + 'CC'] : [colors.error, colors.error + 'CC']}
+                        style={styles.cardIcon}
+                      >
+                        <MaterialCommunityIcons
+                          name={service.isAvailable ? 'check-circle' : 'close-circle'}
+                          size={20}
+                          color={colors.white}
+                        />
+                      </LinearGradient>
+                      <Text variant="titleMedium" style={styles.cardTitle}>
+                        Availability
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.availabilityBadge,
+                        { backgroundColor: service.isAvailable ? colors.success + '20' : colors.error + '20' },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.availabilityText,
+                          { color: service.isAvailable ? colors.success : colors.error },
+                        ]}
+                      >
+                        {service.isAvailable ? 'Available Now' : 'Currently Unavailable'}
+                      </Text>
+                    </View>
+                  </LinearGradient>
+                </View>
+              )}
+
+              <View style={{ height: 100 }} />
+            </View>
+          </ScrollView>
+
+          {/* Bottom Action Button */}
+          <View style={styles.bottomBar}>
+            <View style={styles.bottomPriceContainer}>
+              <Text variant="labelMedium" style={styles.bottomPriceLabel}>
+                Starting from
+              </Text>
+              <Text variant="headlineSmall" style={styles.bottomPrice}>
+                ₹{service.basePrice}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.bookButton}
+              onPress={handleBookService}
+              disabled={!service.isAvailable}
+            >
+              <LinearGradient
+                colors={service.isAvailable ? [colors.primary, colors.primaryDark] : [colors.gray[400], colors.gray[500]]}
+                style={styles.bookButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <MaterialCommunityIcons name="calendar-check" size={20} color={colors.white} />
+                <Text style={styles.bookButtonText}>Book Service</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: spacing.md,
+    color: colors.gray[300],
+    fontSize: 16,
+  },
+  errorText: {
+    marginTop: spacing.md,
+    color: colors.gray[400],
+    fontSize: 16,
+  },
   image: {
     width: '100%',
-    height: 250,
-    backgroundColor: '#F5F5F5',
+    height: 280,
+    backgroundColor: colors.gray[200],
   },
   placeholderImage: {
+    width: '100%',
+    height: 280,
     justifyContent: 'center',
     alignItems: 'center',
   },
   favoriteButton: {
     position: 'absolute',
-    top: 200,
-    right: 16,
-    backgroundColor: '#FFFFFF',
-    elevation: 4,
+    top: 230,
+    right: spacing.lg,
+  },
+  favoriteGradient: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.lg,
   },
   content: {
-    padding: 16,
-    paddingBottom: 100,
+    padding: spacing.lg,
   },
-  header: {
-    marginBottom: 16,
+  headerCard: {
+    marginBottom: spacing.md,
   },
-  titleRow: {
+  headerCardGradient: {
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    ...shadows.md,
+  },
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+  },
+  headerLeft: {
+    flex: 1,
+    marginRight: spacing.md,
   },
   title: {
-    flex: 1,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginRight: 12,
+    fontWeight: '800',
+    color: colors.gray[900],
+    marginBottom: spacing.sm,
+    letterSpacing: -0.3,
   },
-  categoryChip: {
+  categoryBadge: {
     alignSelf: 'flex-start',
+    backgroundColor: colors.primary + '15',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
   },
-  ratingRow: {
+  categoryBadgeText: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: colors.gray[100],
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.md,
+    gap: 4,
   },
   rating: {
-    color: '#FF9800',
-    fontWeight: '600',
+    color: colors.gray[900],
+    fontWeight: '700',
   },
   ratingCount: {
-    color: '#999999',
+    color: colors.gray[600],
   },
-  divider: {
-    marginVertical: 16,
+  card: {
+    marginBottom: spacing.md,
   },
-  section: {
-    marginBottom: 8,
+  cardGradient: {
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    ...shadows.md,
   },
-  sectionLabel: {
-    color: '#666666',
-    marginBottom: 8,
-    fontWeight: '600',
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
-  priceContainer: {
+  cardIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
+  },
+  cardTitle: {
+    fontWeight: '700',
+    color: colors.gray[900],
+  },
+  priceRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 8,
+    gap: spacing.sm,
   },
   price: {
-    color: '#2196F3',
-    fontWeight: 'bold',
+    color: colors.primary,
+    fontWeight: '800',
   },
   priceUnit: {
-    color: '#999999',
+    color: colors.gray[600],
   },
   description: {
-    color: '#333333',
+    color: colors.gray[700],
     lineHeight: 24,
   },
   featureItem: {
     flexDirection: 'row',
-    marginBottom: 8,
-  },
-  featureBullet: {
-    color: '#4CAF50',
-    fontSize: 18,
-    marginRight: 8,
-    fontWeight: 'bold',
+    alignItems: 'flex-start',
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
   },
   featureText: {
     flex: 1,
-    color: '#333333',
+    color: colors.gray[700],
+    lineHeight: 20,
   },
   infoText: {
-    color: '#333333',
+    color: colors.gray[700],
+  },
+  availabilityBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+  },
+  availabilityText: {
+    fontWeight: '700',
+    fontSize: 14,
   },
   bottomBar: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
-    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    padding: spacing.lg,
+    backgroundColor: colors.white,
+    ...shadows.lg,
   },
   bottomPriceContainer: {
     flex: 1,
   },
   bottomPriceLabel: {
-    color: '#999999',
+    color: colors.gray[600],
     marginBottom: 2,
   },
   bottomPrice: {
-    color: '#2196F3',
-    fontWeight: 'bold',
+    color: colors.primary,
+    fontWeight: '800',
   },
   bookButton: {
-    flex: 1,
-    marginLeft: 16,
+    marginLeft: spacing.md,
   },
-  bookButtonContent: {
-    paddingVertical: 8,
+  bookButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.lg,
+    gap: spacing.sm,
+    ...shadows.md,
+  },
+  bookButtonText: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 16,
   },
 });
