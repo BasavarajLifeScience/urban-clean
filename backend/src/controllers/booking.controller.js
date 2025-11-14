@@ -98,15 +98,35 @@ const getBookingById = async (req, res, next) => {
       throw new NotFoundError('Booking not found');
     }
 
+    // Debug: Log the raw booking object structure
+    console.log('📋 [Booking Controller] Raw booking structure:', {
+      residentId: booking.residentId,
+      residentIdType: typeof booking.residentId,
+      residentIdHasId: booking.residentId?._id ? 'YES' : 'NO',
+      sevakId: booking.sevakId,
+      sevakIdType: typeof booking.sevakId,
+      sevakIdHasId: booking.sevakId?._id ? 'YES' : 'NO',
+      bookingId: booking._id.toString()
+    });
+
     // Check if user has permission to view this booking
     // Handle both populated and non-populated residentId/sevakId
     const residentIdStr = booking.residentId?._id?.toString() || booking.residentId?.toString();
     const sevakIdStr = booking.sevakId?._id?.toString() || booking.sevakId?.toString();
 
-    console.log('🔍 [Booking Controller] Comparing:', { userId, residentIdStr, sevakIdStr });
+    console.log('🔍 [Booking Controller] Permission Check:', {
+      userId: userId,
+      userIdType: typeof userId,
+      residentIdStr: residentIdStr,
+      residentIdStrType: typeof residentIdStr,
+      sevakIdStr: sevakIdStr,
+      sevakIdStrType: typeof sevakIdStr,
+      residentMatch: residentIdStr === userId,
+      sevakMatch: sevakIdStr === userId
+    });
 
     if (residentIdStr !== userId && sevakIdStr !== userId) {
-      console.error('❌ [Booking Controller] Permission denied');
+      console.error('❌ [Booking Controller] Permission denied - User does not match resident or sevak');
       throw new ForbiddenError('You do not have permission to view this booking');
     }
 
