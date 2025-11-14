@@ -211,15 +211,19 @@ const completeJob = async (req, res, next) => {
       throw new ForbiddenError('You are not assigned to this booking');
     }
 
-    // Handle file uploads
-    if (req.files) {
+    // Handle file uploads (only if files are actually uploaded)
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
       const beforeImages = req.files.filter(f => f.fieldname === 'beforeImages')
         .map(f => `/uploads/job-photos/${f.filename}`);
       const afterImages = req.files.filter(f => f.fieldname === 'afterImages')
         .map(f => `/uploads/job-photos/${f.filename}`);
 
-      booking.beforeImages = beforeImages;
-      booking.afterImages = afterImages;
+      if (beforeImages.length > 0) {
+        booking.beforeImages = beforeImages;
+      }
+      if (afterImages.length > 0) {
+        booking.afterImages = afterImages;
+      }
     }
 
     // Update booking
