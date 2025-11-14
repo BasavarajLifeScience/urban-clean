@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, ImageBackground } from 'react-native';
+import { View, StyleSheet, ScrollView, ImageBackground, TouchableOpacity } from 'react-native';
 import { Text, Button, Card, RadioButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -74,7 +74,12 @@ export const WelcomeScreen = () => {
                   { value: 'resident', title: 'Resident', description: 'Book services for your home' },
                   { value: 'sevak', title: 'Service Provider', description: 'Provide services to residents' },
                 ].map((role, index) => (
-                  <View key={role.value} style={[styles.roleCard, selectedRole === role.value && styles.selectedCard]}>
+                  <TouchableOpacity
+                    key={role.value}
+                    style={[styles.roleCard, selectedRole === role.value && styles.selectedCard]}
+                    onPress={() => setSelectedRole(role.value as 'resident' | 'sevak')}
+                    activeOpacity={0.7}
+                  >
                     <View style={styles.roleCardContent}>
                       <View style={styles.roleIconContainer}>
                         <LinearGradient
@@ -108,7 +113,7 @@ export const WelcomeScreen = () => {
                         uncheckedColor={colors.gray[500]}
                       />
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </RadioButton.Group>
 

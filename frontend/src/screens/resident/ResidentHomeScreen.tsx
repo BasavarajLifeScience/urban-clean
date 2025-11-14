@@ -166,7 +166,7 @@ export const ResidentHomeScreen = () => {
                 <Text variant="titleLarge" style={styles.sectionTitle}>
                   Categories
                 </Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Services')}>
                   <Text style={styles.viewAllLink}>View All</Text>
                 </TouchableOpacity>
               </View>
@@ -177,7 +177,11 @@ export const ResidentHomeScreen = () => {
                 contentContainerStyle={styles.categoriesContainer}
               >
                 {categories.map((category, index) => (
-                  <TouchableOpacity key={index} style={styles.categoryCard}>
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.categoryCard}
+                    onPress={() => navigation.navigate('Services')}
+                  >
                     <LinearGradient
                       colors={category.gradient}
                       style={styles.categoryGradient}
@@ -204,14 +208,18 @@ export const ResidentHomeScreen = () => {
                 <Text variant="titleLarge" style={styles.sectionTitle}>
                   Featured Services
                 </Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Services')}>
                   <Text style={styles.viewAllLink}>View All</Text>
                 </TouchableOpacity>
               </View>
 
               {featuredServices.length > 0 ? (
                 featuredServices.map((service) => (
-                  <TouchableOpacity key={service._id} style={styles.serviceCard}>
+                  <TouchableOpacity
+                    key={service._id}
+                    style={styles.serviceCard}
+                    onPress={() => navigation.navigate('ServiceDetail', { serviceId: service._id })}
+                  >
                     <LinearGradient
                       colors={[colors.white, colors.gray[50]]}
                       style={styles.serviceCardGradient}
@@ -302,14 +310,18 @@ export const ResidentHomeScreen = () => {
                 <Text variant="titleLarge" style={styles.sectionTitle}>
                   Recent Bookings
                 </Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Bookings')}>
                   <Text style={styles.viewAllLink}>View All</Text>
                 </TouchableOpacity>
               </View>
 
               {recentBookings.length > 0 ? (
                 recentBookings.map((booking) => (
-                  <TouchableOpacity key={booking._id} style={styles.bookingCard}>
+                  <TouchableOpacity
+                    key={booking._id}
+                    style={styles.bookingCard}
+                    onPress={() => navigation.navigate('BookingDetail', { bookingId: booking._id })}
+                  >
                     <LinearGradient
                       colors={[colors.white, colors.gray[50]]}
                       style={styles.bookingCardGradient}
@@ -395,9 +407,7 @@ export const ResidentHomeScreen = () => {
           >
             <TouchableOpacity
               style={styles.fabTouchable}
-              onPress={() => {
-                // Navigate to services screen
-              }}
+              onPress={() => navigation.navigate('Services')}
             >
               <MaterialCommunityIcons name="plus" size={24} color={colors.white} />
               <Text style={styles.fabLabel}>New Booking</Text>
