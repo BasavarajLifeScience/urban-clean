@@ -23,6 +23,8 @@ export const SevakJobDetailScreen = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [checkInOTP, setCheckInOTP] = useState('');
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [completionNotes, setCompletionNotes] = useState('');
 
   useEffect(() => {
     loadJobDetail();
@@ -106,6 +108,52 @@ export const SevakJobDetailScreen = () => {
     }
   };
 
+  const handleCompleteJob = () => {
+    setShowCompleteModal(true);
+  };
+
+  const handleSubmitCompletion = async () => {
+    if (!completionNotes.trim()) {
+      Alert.alert('Required', 'Please add completion notes');
+      return;
+    }
+
+    Alert.alert(
+      'Complete Job',
+      'Are you sure you want to mark this job as completed?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Complete',
+          onPress: async () => {
+            try {
+              setActionLoading(true);
+
+              const formData = new FormData();
+              formData.append('completionNotes', completionNotes);
+
+              await sevakApi.completeJob(jobId, formData);
+
+              Alert.alert('Success', 'Job marked as completed!', [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    setShowCompleteModal(false);
+                    loadJobDetail();
+                  },
+                },
+              ]);
+            } catch (error: any) {
+              Alert.alert('Error', error.response?.data?.message || 'Unable to complete job. Please try again.');
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const getStatusColor = (status: string) => {
     const statusColors: Record<string, string> = {
       pending: colors.warning,
@@ -154,8 +202,9 @@ export const SevakJobDetailScreen = () => {
     );
   }
 
-  const canCheckIn = job.status === 'confirmed';
+  const canCheckIn = job.status === 'assigned' || job.status === 'confirmed';
   const canCheckOut = job.status === 'in-progress';
+  const canComplete = job.status === 'in-progress' && job.checkOutTime; // Can complete after checkout
   const isCompleted = job.status === 'completed';
 
   return (
@@ -492,7 +541,7 @@ export const SevakJobDetailScreen = () => {
           </ScrollView>
 
           {/* Action Buttons */}
-          {(canCheckIn || canCheckOut) && (
+          {(canCheckIn || canCheckOut || canComplete) && (
             <View style={styles.bottomBar}>
               {canCheckIn && (
                 <TouchableOpacity
@@ -548,10 +597,103 @@ export const SevakJobDetailScreen = () => {
                   </LinearGradient>
                 </TouchableOpacity>
               )}
+              {canComplete && (
+                <TouchableOpacity
+                  style={[styles.bottomButton, actionLoading && styles.buttonDisabled]}
+                  onPress={handleCompleteJob}
+                  disabled={actionLoading}
+                >
+                  <LinearGradient
+                    colors={actionLoading ? [colors.gray[400], colors.gray[500]] : [colors.primary, colors.primaryDark]}
+                    style={styles.bottomButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    {actionLoading ? (
+                      <ActivityIndicator color={colors.white} />
+                    ) : (
+                      <>
+                        <MaterialCommunityIcons
+                          name="check-circle"
+                          size={20}
+                          color={colors.white}
+                        />
+                        <Text style={styles.bottomButtonText}>Complete Job</Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </SafeAreaView>
       </LinearGradient>
+
+      {/* Complete Job Modal */}
+      {showCompleteModal && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text variant="titleLarge" style={styles.modalTitle}>
+                Complete Job
+              </Text>
+              <TouchableOpacity onPress={() => setShowCompleteModal(false)}>
+                <MaterialCommunityIcons name="close" size={24} color={colors.gray[600]} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalContent}>
+              <Text variant="bodyMedium" style={styles.modalLabel}>
+                Completion Notes <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                label="Add notes about the work completed"
+                mode="outlined"
+                value={completionNotes}
+                onChangeText={setCompletionNotes}
+                multiline
+                numberOfLines={4}
+                style={styles.notesInput}
+                outlineColor={colors.gray[300]}
+                activeOutlineColor={colors.primary}
+                placeholder="Describe what was done, any issues encountered, etc."
+              />
+
+              <Text variant="bodySmall" style={styles.helpText}>
+                Provide a brief summary of the work completed. You can add photos later if needed.
+              </Text>
+            </View>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalButtonSecondary}
+                onPress={() => setShowCompleteModal(false)}
+                disabled={actionLoading}
+              >
+                <Text style={styles.modalButtonSecondaryText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButtonPrimary, (!completionNotes.trim() || actionLoading) && styles.buttonDisabled]}
+                onPress={handleSubmitCompletion}
+                disabled={!completionNotes.trim() || actionLoading}
+              >
+                <LinearGradient
+                  colors={(!completionNotes.trim() || actionLoading) ? [colors.gray[400], colors.gray[500]] : [colors.primary, colors.primaryDark]}
+                  style={styles.modalButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  {actionLoading ? (
+                    <ActivityIndicator color={colors.white} size="small" />
+                  ) : (
+                    <Text style={styles.modalButtonPrimaryText}>Mark Complete</Text>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
@@ -765,5 +907,87 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalContainer: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    width: '100%',
+    maxWidth: 400,
+    ...shadows.lg,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray[200],
+  },
+  modalTitle: {
+    fontWeight: '700',
+    color: colors.gray[900],
+  },
+  modalContent: {
+    padding: spacing.lg,
+  },
+  modalLabel: {
+    color: colors.gray[700],
+    marginBottom: spacing.sm,
+    fontWeight: '600',
+  },
+  required: {
+    color: colors.error,
+  },
+  notesInput: {
+    backgroundColor: colors.white,
+    marginBottom: spacing.sm,
+  },
+  helpText: {
+    color: colors.gray[500],
+    lineHeight: 18,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray[200],
+  },
+  modalButtonSecondary: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.gray[300],
+  },
+  modalButtonSecondaryText: {
+    color: colors.gray[700],
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  modalButtonPrimary: {
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+  },
+  modalButtonGradient: {
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+  },
+  modalButtonPrimaryText: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 16,
   },
 });
