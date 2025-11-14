@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { adminAPI } from '@/lib/api';
-import { Calendar, Search, User } from 'lucide-react';
+import { Calendar, Search, User, UserPlus, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Booking {
@@ -13,6 +13,7 @@ interface Booking {
     email: string;
   };
   sevak?: {
+    _id: string;
     fullName: string;
   };
   service: {
@@ -24,14 +25,31 @@ interface Booking {
   totalAmount: number;
 }
 
+interface Sevak {
+  _id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  isActive: boolean;
+  isVerified: boolean;
+  isBlacklisted: boolean;
+}
+
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [sevaks, setSevaks] = useState<Sevak[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [selectedSevakId, setSelectedSevakId] = useState('');
+  const [assignmentNotes, setAssignmentNotes] = useState('');
+  const [isAssigning, setIsAssigning] = useState(false);
 
   useEffect(() => {
     fetchBookings();
+    fetchSevaks();
   }, [filter]);
 
   const fetchBookings = async () => {
@@ -48,6 +66,63 @@ export default function BookingsPage() {
       console.error('Failed to fetch bookings:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchSevaks = async () => {
+    try {
+      const response = await adminAPI.getSevaks({
+        status: 'active',
+        isVerified: 'true',
+        limit: 100
+      });
+      if (response.success) {
+        // Filter out blacklisted sevaks
+        const availableSevaks = response.data.sevaks.filter(
+          (sevak: Sevak) => !sevak.isBlacklisted && sevak.isActive && sevak.isVerified
+        );
+        setSevaks(availableSevaks);
+      }
+    } catch (err) {
+      console.error('Failed to fetch sevaks:', err);
+    }
+  };
+
+  const handleAssignClick = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setSelectedSevakId('');
+    setAssignmentNotes('');
+    setShowAssignModal(true);
+  };
+
+  const handleAssignSevak = async () => {
+    if (!selectedBooking || !selectedSevakId) return;
+
+    try {
+      setIsAssigning(true);
+      const response = await adminAPI.assignSevak(selectedBooking._id, {
+        sevakId: selectedSevakId,
+        notes: assignmentNotes || undefined,
+      });
+
+      if (response.success) {
+        // Show success message
+        alert('Sevak assigned successfully!');
+
+        // Close modal
+        setShowAssignModal(false);
+        setSelectedBooking(null);
+        setSelectedSevakId('');
+        setAssignmentNotes('');
+
+        // Refresh bookings list
+        fetchBookings();
+      }
+    } catch (err: any) {
+      console.error('Failed to assign sevak:', err);
+      alert(err.response?.data?.message || 'Failed to assign sevak');
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -68,6 +143,10 @@ export default function BookingsPage() {
     booking.resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     booking.service.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const canAssignSevak = (booking: Booking) => {
+    return !booking.sevak && booking.status === 'pending';
+  };
 
   return (
     <div className="p-8">
@@ -139,6 +218,9 @@ export default function BookingsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Status
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -185,6 +267,17 @@ export default function BookingsPage() {
                       {booking.status}
                     </span>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {canAssignSevak(booking) && (
+                      <button
+                        onClick={() => handleAssignClick(booking)}
+                        className="inline-flex items-center px-3 py-1.5 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+                      >
+                        <UserPlus className="h-4 w-4 mr-1" />
+                        Assign
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -195,6 +288,121 @@ export default function BookingsPage() {
               <p className="text-gray-500">No bookings found</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Assign Sevak Modal */}
+      {showAssignModal && selectedBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Assign Sevak</h2>
+                <p className="text-gray-600 mt-1">
+                  Booking #{selectedBooking.bookingNumber}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAssignModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              {/* Booking Details */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Booking Details</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-600">Service</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedBooking.service.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600">Customer</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedBooking.resident.fullName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600">Schedule</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {format(new Date(selectedBooking.scheduledDate), 'MMM dd, yyyy')} at {selectedBooking.scheduledTime}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600">Amount</p>
+                    <p className="text-sm font-medium text-gray-900">₹{selectedBooking.totalAmount.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Select Sevak */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Sevak <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={selectedSevakId}
+                  onChange={(e) => setSelectedSevakId(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="">Choose a sevak...</option>
+                  {sevaks.map((sevak) => (
+                    <option key={sevak._id} value={sevak._id}>
+                      {sevak.fullName} - {sevak.phoneNumber}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {sevaks.length} active and verified sevaks available
+                </p>
+              </div>
+
+              {/* Notes (Optional) */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Assignment Notes (Optional)
+                </label>
+                <textarea
+                  value={assignmentNotes}
+                  onChange={(e) => setAssignmentNotes(e.target.value)}
+                  rows={3}
+                  placeholder="Add any special instructions or notes..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t bg-gray-50">
+              <button
+                onClick={() => setShowAssignModal(false)}
+                disabled={isAssigning}
+                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAssignSevak}
+                disabled={!selectedSevakId || isAssigning}
+                className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isAssigning ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Assigning...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4" />
+                    Assign Sevak
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
