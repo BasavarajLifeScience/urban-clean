@@ -9,8 +9,36 @@ import {
 
 export const authApi = {
   register: async (data: RegisterRequest): Promise<ApiResponse> => {
-    const response = await api.post('/auth/register', data);
-    return response.data;
+    console.log('🌐 [authApi] register() called');
+    console.log('📤 [authApi] Request data:', {
+      fullName: data.fullName,
+      phoneNumber: data.phoneNumber,
+      email: data.email,
+      role: data.role,
+      hasPassword: !!data.password,
+    });
+
+    try {
+      console.log('⏳ [authApi] Making POST request to /auth/register');
+      const response = await api.post('/auth/register', data);
+
+      console.log('📥 [authApi] Response received');
+      console.log('📥 [authApi] Status:', response.status);
+      console.log('📥 [authApi] Response data:', response.data);
+
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ [authApi] Request failed:', error);
+      console.error('❌ [authApi] Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        url: error.config?.url,
+        baseURL: error.config?.baseURL,
+      });
+      throw error;
+    }
   },
 
   verifyOTP: async (data: OTPVerifyRequest): Promise<ApiResponse<AuthResponse>> => {

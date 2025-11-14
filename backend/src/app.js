@@ -22,13 +22,30 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
-// CORS configuration
-const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
-  credentials: true,
-  optionsSuccessStatus: 200,
-};
-app.use(cors(corsOptions));
+// CORS configuration - completely disabled for development
+if (process.env.NODE_ENV === 'development') {
+  logger.info('🌐 [CORS] Development mode - CORS completely disabled, allowing all origins');
+  app.use(cors());
+} else {
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['*'];
+  logger.info(`🌐 [CORS] Production mode - Allowed origins: ${JSON.stringify(allowedOrigins)}`);
+
+  const corsOptions = {
+    origin: (origin, callback) => {
+      logger.info(`🌐 [CORS] Request from origin: ${origin || 'no origin'}`);
+
+      if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      logger.warn(`❌ [CORS] Origin ${origin} not allowed`);
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    optionsSuccessStatus: 200,
+  };
+  app.use(cors(corsOptions));
+}
 
 // Compression
 app.use(compression());

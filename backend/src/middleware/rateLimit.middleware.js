@@ -12,7 +12,7 @@ const apiLimiter = rateLimit({
 // Stricter rate limiter for authentication routes
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per windowMs
+  max: process.env.NODE_ENV === 'development' ? 100 : 5, // 100 requests in dev, 5 in production
   message: 'Too many authentication attempts, please try again later',
   skipSuccessfulRequests: true, // Don't count successful requests
 });
@@ -20,14 +20,14 @@ const authLimiter = rateLimit({
 // Rate limiter for OTP requests
 const otpLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 3, // 3 requests per minute
+  max: process.env.NODE_ENV === 'development' ? 50 : 3, // 50 requests in dev, 3 in production
   message: 'Too many OTP requests, please try again later',
 });
 
 // Rate limiter for password reset
 const passwordResetLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // 3 requests per hour
+  max: process.env.NODE_ENV === 'development' ? 50 : 3, // 50 requests in dev, 3 in production
   message: 'Too many password reset attempts, please try again later',
 });
 
