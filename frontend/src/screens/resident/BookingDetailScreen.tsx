@@ -6,6 +6,7 @@ import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import * as Clipboard from 'expo-clipboard';
 import { ResidentStackParamList } from '../../navigation/types';
 import { bookingApi } from '../../services/api/booking.api';
 import { Booking } from '../../types';
@@ -90,6 +91,13 @@ export const BookingDetailScreen = () => {
         },
       ]
     );
+  };
+
+  const handleCopyOTP = async () => {
+    if (booking?.checkInOTP) {
+      await Clipboard.setStringAsync(booking.checkInOTP);
+      Alert.alert('Copied!', 'Check-in OTP copied to clipboard');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -266,6 +274,51 @@ export const BookingDetailScreen = () => {
                 )}
               </LinearGradient>
             </View>
+
+            {/* Check-In OTP Card */}
+            {booking.checkInOTP && ['assigned', 'confirmed', 'in-progress'].includes(booking.status) && (
+              <View style={styles.card}>
+                <LinearGradient
+                  colors={[colors.warning, colors.warning + 'E6']}
+                  style={styles.otpCardGradient}
+                >
+                  <View style={styles.otpHeader}>
+                    <View style={styles.otpIconContainer}>
+                      <MaterialCommunityIcons name="shield-key" size={28} color={colors.white} />
+                    </View>
+                    <View style={styles.otpHeaderText}>
+                      <Text variant="titleMedium" style={styles.otpTitle}>
+                        Check-In OTP
+                      </Text>
+                      <Text variant="bodySmall" style={styles.otpSubtitle}>
+                        Share this OTP with the service provider when they arrive
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.otpContainer}>
+                    <View style={styles.otpCodeBox}>
+                      <Text style={styles.otpCode}>{booking.checkInOTP}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.copyButton}
+                      onPress={handleCopyOTP}
+                      activeOpacity={0.7}
+                    >
+                      <MaterialCommunityIcons name="content-copy" size={20} color={colors.white} />
+                      <Text style={styles.copyButtonText}>Copy</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.otpFooter}>
+                    <MaterialCommunityIcons name="information-outline" size={16} color={colors.white + 'CC'} />
+                    <Text style={styles.otpFooterText}>
+                      The service provider will enter this OTP to start the job
+                    </Text>
+                  </View>
+                </LinearGradient>
+              </View>
+            )}
 
             {/* Address Card */}
             {booking.address && (
@@ -797,5 +850,82 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontWeight: '700',
     fontSize: 16,
+  },
+  // OTP Card Styles
+  otpCardGradient: {
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    ...shadows.lg,
+  },
+  otpHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  otpIconContainer: {
+    marginRight: spacing.md,
+  },
+  otpHeaderText: {
+    flex: 1,
+  },
+  otpTitle: {
+    color: colors.white,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  otpSubtitle: {
+    color: colors.white + 'DD',
+    lineHeight: 18,
+  },
+  otpContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  otpCodeBox: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    flex: 1,
+    marginRight: spacing.md,
+  },
+  otpCode: {
+    fontSize: 32,
+    fontWeight: '800',
+    letterSpacing: 4,
+    textAlign: 'center',
+    color: colors.warning,
+  },
+  copyButton: {
+    backgroundColor: colors.white + '33',
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.white + '66',
+  },
+  copyButtonText: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  otpFooter: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.white + '33',
+  },
+  otpFooterText: {
+    flex: 1,
+    fontSize: 12,
+    color: colors.white + 'CC',
+    lineHeight: 16,
   },
 });
