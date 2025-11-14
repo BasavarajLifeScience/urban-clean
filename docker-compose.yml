@@ -41,7 +41,7 @@ services:
       JWT_REFRESH_EXPIRY: 7d
       RAZORPAY_KEY_ID: rzp_test_xxxxxxxxxxxxx
       RAZORPAY_KEY_SECRET: your_razorpay_secret
-      ALLOWED_ORIGINS: http://localhost:19000,http://localhost:19001,http://localhost:8081
+      ALLOWED_ORIGINS: http://localhost:19000,http://localhost:19001,http://localhost:19002,http://localhost:8081,http://10.0.2.2:19000,http://10.0.2.2:19001
       DEV_OTP: 123456
     volumes:
       - ./backend:/app

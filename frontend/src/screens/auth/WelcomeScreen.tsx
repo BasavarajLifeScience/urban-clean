@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, ImageBackground } from 'react-native';
 import { Text, Button, Card, RadioButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { AuthStackParamList } from '../../navigation/types';
+import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
 type WelcomeScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Welcome'>;
 
@@ -20,162 +23,265 @@ export const WelcomeScreen = () => {
     navigation.navigate('Login');
   };
 
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'resident':
+        return 'home-account';
+      case 'sevak':
+        return 'account-hard-hat';
+      case 'vendor':
+        return 'store';
+      default:
+        return 'account';
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text variant="displaySmall" style={styles.title}>
-            Urban Clean
-          </Text>
-          <Text variant="titleMedium" style={styles.subtitle}>
-            Society Service Booking Platform
-          </Text>
-        </View>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium, colors.backgroundMedium]}
+        style={styles.gradient}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <View style={styles.header}>
+              <View style={styles.logoContainer}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primaryDark]}
+                  style={styles.logoGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <MaterialCommunityIcons name="home-city" size={48} color={colors.white} />
+                </LinearGradient>
+              </View>
+              <Text variant="displaySmall" style={styles.title}>
+                Urban Clean
+              </Text>
+              <Text variant="titleMedium" style={styles.subtitle}>
+                Your Society Service Platform
+              </Text>
+            </View>
 
-        <View style={styles.content}>
-          <Text variant="titleLarge" style={styles.sectionTitle}>
-            I am a...
-          </Text>
+            <View style={styles.content}>
+              <Text variant="titleLarge" style={styles.sectionTitle}>
+                Choose Your Role
+              </Text>
 
-          <Card style={styles.card}>
-            <Card.Content>
               <RadioButton.Group
                 onValueChange={(value) => setSelectedRole(value as 'resident' | 'sevak' | 'vendor')}
                 value={selectedRole}
               >
-                <View style={styles.radioItem}>
-                  <View style={styles.radioContent}>
-                    <Text variant="titleMedium">Resident</Text>
-                    <Text variant="bodyMedium" style={styles.roleDescription}>
-                      Book services for my home
-                    </Text>
+                {[
+                  { value: 'resident', title: 'Resident', description: 'Book services for your home' },
+                  { value: 'sevak', title: 'Service Provider', description: 'Provide services to residents' },
+                  { value: 'vendor', title: 'Vendor', description: 'Manage your service business' },
+                ].map((role, index) => (
+                  <View key={role.value} style={[styles.roleCard, selectedRole === role.value && styles.selectedCard]}>
+                    <View style={styles.roleCardContent}>
+                      <View style={styles.roleIconContainer}>
+                        <LinearGradient
+                          colors={
+                            selectedRole === role.value
+                              ? [colors.primary, colors.primaryDark]
+                              : [colors.gray[700], colors.gray[600]]
+                          }
+                          style={styles.roleIconGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <MaterialCommunityIcons
+                            name={getRoleIcon(role.value) as any}
+                            size={32}
+                            color={colors.white}
+                          />
+                        </LinearGradient>
+                      </View>
+                      <View style={styles.roleTextContainer}>
+                        <Text variant="titleMedium" style={styles.roleTitle}>
+                          {role.title}
+                        </Text>
+                        <Text variant="bodyMedium" style={styles.roleDescription}>
+                          {role.description}
+                        </Text>
+                      </View>
+                      <RadioButton
+                        value={role.value}
+                        color={colors.primary}
+                        uncheckedColor={colors.gray[500]}
+                      />
+                    </View>
                   </View>
-                  <RadioButton value="resident" />
-                </View>
-
-                <View style={styles.divider} />
-
-                <View style={styles.radioItem}>
-                  <View style={styles.radioContent}>
-                    <Text variant="titleMedium">Service Provider (Sevak)</Text>
-                    <Text variant="bodyMedium" style={styles.roleDescription}>
-                      Provide services to residents
-                    </Text>
-                  </View>
-                  <RadioButton value="sevak" />
-                </View>
-
-                <View style={styles.divider} />
-
-                <View style={styles.radioItem}>
-                  <View style={styles.radioContent}>
-                    <Text variant="titleMedium">Vendor</Text>
-                    <Text variant="bodyMedium" style={styles.roleDescription}>
-                      Manage my service business
-                    </Text>
-                  </View>
-                  <RadioButton value="vendor" />
-                </View>
+                ))}
               </RadioButton.Group>
-            </Card.Content>
-          </Card>
 
-          <Button
-            mode="contained"
-            onPress={handleGetStarted}
-            style={styles.primaryButton}
-            contentStyle={styles.buttonContent}
-          >
-            Get Started
-          </Button>
+              <LinearGradient
+                colors={[colors.primary, colors.primaryDark]}
+                style={styles.primaryButton}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Button
+                  mode="text"
+                  onPress={handleGetStarted}
+                  contentStyle={styles.buttonContent}
+                  labelStyle={styles.primaryButtonLabel}
+                >
+                  Get Started
+                </Button>
+              </LinearGradient>
 
-          <Button
-            mode="text"
-            onPress={handleLogin}
-            style={styles.textButton}
-          >
-            Already have an account? Login
-          </Button>
-        </View>
+              <Button
+                mode="text"
+                onPress={handleLogin}
+                style={styles.textButton}
+                labelStyle={styles.textButtonLabel}
+              >
+                Already have an account? <Text style={styles.loginLink}>Sign In</Text>
+              </Button>
+            </View>
 
-        <View style={styles.footer}>
-          <Text variant="bodySmall" style={styles.footerText}>
-            By continuing, you agree to our Terms of Service and Privacy Policy
-          </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            <View style={styles.footer}>
+              <Text variant="bodySmall" style={styles.footerText}>
+                By continuing, you agree to our{' '}
+                <Text style={styles.footerLink}>Terms of Service</Text> and{' '}
+                <Text style={styles.footerLink}>Privacy Policy</Text>
+              </Text>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 24,
+    padding: spacing.lg,
   },
   header: {
     alignItems: 'center',
-    marginTop: 40,
-    marginBottom: 40,
+    marginTop: spacing.xl,
+    marginBottom: spacing.xxl,
+  },
+  logoContainer: {
+    marginBottom: spacing.lg,
+  },
+  logoGradient: {
+    width: 100,
+    height: 100,
+    borderRadius: borderRadius.xl,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.lg,
   },
   title: {
-    fontWeight: 'bold',
-    color: '#2196F3',
-    marginBottom: 8,
+    fontWeight: '800',
+    color: colors.white,
+    marginBottom: spacing.xs,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    color: '#666666',
+    color: colors.gray[300],
     textAlign: 'center',
   },
   content: {
     flex: 1,
+    marginBottom: spacing.xl,
   },
   sectionTitle: {
-    marginBottom: 16,
-    fontWeight: '600',
-    color: '#333333',
+    marginBottom: spacing.lg,
+    fontWeight: '700',
+    color: colors.white,
+    letterSpacing: -0.2,
   },
-  card: {
-    marginBottom: 24,
-    elevation: 2,
+  roleCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    ...shadows.md,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  radioItem: {
+  selectedCard: {
+    borderColor: colors.primary,
+    ...shadows.colored.primary,
+  },
+  roleCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
   },
-  radioContent: {
+  roleIconContainer: {
+    marginRight: spacing.md,
+  },
+  roleIconGradient: {
+    width: 60,
+    height: 60,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  roleTextContainer: {
     flex: 1,
   },
-  roleDescription: {
-    color: '#666666',
-    marginTop: 4,
+  roleTitle: {
+    fontWeight: '600',
+    color: colors.gray[900],
+    marginBottom: spacing.xs,
   },
-  divider: {
-    height: 1,
-    backgroundColor: '#E0E0E0',
-    marginVertical: 8,
+  roleDescription: {
+    color: colors.gray[600],
+    fontSize: 13,
   },
   primaryButton: {
-    marginBottom: 16,
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    ...shadows.md,
   },
   buttonContent: {
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
+  },
+  primaryButtonLabel: {
+    color: colors.white,
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   textButton: {
-    marginBottom: 16,
+    marginBottom: spacing.md,
+  },
+  textButtonLabel: {
+    color: colors.gray[300],
+    fontSize: 14,
+  },
+  loginLink: {
+    color: colors.primary,
+    fontWeight: '600',
   },
   footer: {
-    marginTop: 32,
+    marginTop: spacing.lg,
     alignItems: 'center',
   },
   footerText: {
-    color: '#999999',
+    color: colors.gray[500],
     textAlign: 'center',
+    fontSize: 12,
+  },
+  footerLink: {
+    color: colors.primary,
+    fontWeight: '600',
   },
 });

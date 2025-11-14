@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, FlatList } from 'react-native';
-import { Text, Searchbar, Card, Button, Chip, ActivityIndicator } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, RefreshControl, FlatList, TouchableOpacity } from 'react-native';
+import { Text, Searchbar, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
 import { serviceApi } from '../../services/api';
 import { Service } from '../../types';
+import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
 type ServicesListScreenNavigationProp = NativeStackNavigationProp<ResidentStackParamList>;
 
@@ -104,227 +107,376 @@ export const ServicesListScreen = () => {
   };
 
   const renderServiceCard = ({ item }: { item: Service }) => (
-    <Card style={styles.serviceCard} onPress={() => navigation.navigate('ServiceDetail', { serviceId: item._id })}>
-      {item.imageUrl && (
-        <Card.Cover source={{ uri: item.imageUrl }} style={styles.cardImage} />
-      )}
-      <Card.Content>
-        <Text variant="titleMedium" style={styles.serviceName}>
-          {item.name}
-        </Text>
-        <Text variant="bodyMedium" numberOfLines={2} style={styles.serviceDescription}>
-          {item.description}
-        </Text>
+    <TouchableOpacity
+      style={styles.serviceCard}
+      onPress={() => navigation.navigate('ServiceDetail', { serviceId: item._id })}
+    >
+      <LinearGradient
+        colors={[colors.white, colors.gray[50]]}
+        style={styles.serviceCardGradient}
+      >
+        <View style={styles.serviceCardContent}>
+          <LinearGradient
+            colors={[colors.primary, colors.primaryDark]}
+            style={styles.serviceIcon}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <MaterialCommunityIcons
+              name="room-service-outline"
+              size={28}
+              color={colors.white}
+            />
+          </LinearGradient>
 
-        <View style={styles.serviceFooter}>
-          <View>
-            <Text variant="labelSmall" style={styles.priceLabel}>
-              Starting from
+          <View style={styles.serviceInfo}>
+            <Text variant="titleMedium" style={styles.serviceName}>
+              {item.name}
             </Text>
-            <Text variant="titleLarge" style={styles.price}>
-              ₹{item.basePrice}
+            <Text
+              variant="bodySmall"
+              style={styles.serviceDescription}
+              numberOfLines={2}
+            >
+              {item.description}
             </Text>
-          </View>
 
-          {item.averageRating !== undefined && item.averageRating > 0 && (
-            <View style={styles.ratingContainer}>
-              <Text variant="titleMedium" style={styles.rating}>
-                ⭐ {item.averageRating.toFixed(1)}
-              </Text>
-              {item.totalRatings && (
-                <Text variant="bodySmall" style={styles.ratingCount}>
-                  ({item.totalRatings} reviews)
+            <View style={styles.serviceFooter}>
+              <View style={styles.priceContainer}>
+                <Text style={styles.priceLabel}>Starting at</Text>
+                <Text variant="titleMedium" style={styles.price}>
+                  ₹{item.basePrice}
                 </Text>
+              </View>
+
+              {item.averageRating !== undefined && item.averageRating > 0 && (
+                <View style={styles.ratingContainer}>
+                  <MaterialCommunityIcons
+                    name="star"
+                    size={16}
+                    color={colors.warning}
+                  />
+                  <Text variant="bodySmall" style={styles.rating}>
+                    {item.averageRating.toFixed(1)}
+                  </Text>
+                </View>
               )}
             </View>
-          )}
-        </View>
 
-        {item.category && (
-          <Chip mode="outlined" style={styles.categoryChip} compact>
-            {item.category}
-          </Chip>
-        )}
-      </Card.Content>
-      <Card.Actions>
-        <Button mode="contained" onPress={() => navigation.navigate('ServiceDetail', { serviceId: item._id })}>
-          View Details
-        </Button>
-      </Card.Actions>
-    </Card>
+            {item.category && (
+              <View style={styles.categoryBadge}>
+                <Text style={styles.categoryBadgeText}>{item.category}</Text>
+              </View>
+            )}
+          </View>
+
+          <TouchableOpacity
+            style={styles.arrowButton}
+            onPress={() => navigation.navigate('ServiceDetail', { serviceId: item._id })}
+          >
+            <LinearGradient
+              colors={[colors.primary, colors.primaryDark]}
+              style={styles.arrowGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <MaterialCommunityIcons
+                name="arrow-right"
+                size={20}
+                color={colors.white}
+              />
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    </TouchableOpacity>
   );
 
   if (loading && services.length === 0) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2196F3" />
-      </View>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium]}
+        style={styles.centered}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Loading services...</Text>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text variant="headlineMedium" style={styles.title}>
-          Services
-        </Text>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[colors.backgroundDark, colors.backgroundMedium, colors.backgroundLight]}
+        style={styles.gradient}
+        locations={[0, 0.3, 1]}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.header}>
+            <Text variant="headlineMedium" style={styles.title}>
+              All Services
+            </Text>
 
-        <Searchbar
-          placeholder="Search services..."
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={styles.searchBar}
-        />
+            <Searchbar
+              placeholder="Search services..."
+              onChangeText={setSearchQuery}
+              value={searchQuery}
+              style={styles.searchBar}
+              inputStyle={styles.searchInput}
+              iconColor={colors.primary}
+              placeholderTextColor={colors.gray[500]}
+              elevation={0}
+            />
 
-        {categories.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesContainer}
-          >
-            {categories.map((category, index) => (
-              <Chip
-                key={index}
-                mode={selectedCategory === category ? 'flat' : 'outlined'}
-                selected={selectedCategory === category}
-                onPress={() => handleCategorySelect(category)}
-                style={styles.filterChip}
+            {categories.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.categoriesContainer}
               >
-                {category}
-              </Chip>
-            ))}
-          </ScrollView>
-        )}
-      </View>
-
-      <FlatList
-        data={services}
-        renderItem={renderServiceCard}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text variant="titleMedium" style={styles.emptyText}>
-              No services found
-            </Text>
-            <Text variant="bodyMedium" style={styles.emptySubtext}>
-              Try adjusting your filters or search query
-            </Text>
+                {categories.map((category, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => handleCategorySelect(category)}
+                  >
+                    <LinearGradient
+                      colors={
+                        selectedCategory === category
+                          ? [colors.primary, colors.primaryDark]
+                          : [colors.white, colors.gray[100]]
+                      }
+                      style={styles.categoryChip}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <Text
+                        style={[
+                          styles.categoryChipText,
+                          selectedCategory === category && styles.categoryChipTextSelected,
+                        ]}
+                      >
+                        {category}
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
           </View>
-        }
-        ListFooterComponent={
-          hasMore && services.length > 0 ? (
-            <View style={styles.footerLoader}>
-              <ActivityIndicator size="small" color="#2196F3" />
-            </View>
-          ) : null
-        }
-      />
-    </SafeAreaView>
+
+          <FlatList
+            data={services}
+            renderItem={renderServiceCard}
+            keyExtractor={(item) => item._id}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+              />
+            }
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.5}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <MaterialCommunityIcons
+                  name="package-variant-closed"
+                  size={64}
+                  color={colors.gray[400]}
+                />
+                <Text variant="titleLarge" style={styles.emptyText}>
+                  No services found
+                </Text>
+                <Text variant="bodyMedium" style={styles.emptySubtext}>
+                  {selectedStatus === 'all'
+                    ? 'Try adjusting your filters or search query'
+                    : `No services match your criteria`}
+                </Text>
+              </View>
+            }
+            ListFooterComponent={
+              hasMore && services.length > 0 ? (
+                <View style={styles.footerLoader}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                </View>
+              ) : null
+            }
+          />
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: spacing.md,
+    color: colors.gray[300],
+    fontSize: 16,
+  },
   header: {
-    backgroundColor: '#FFFFFF',
-    paddingTop: 16,
-    paddingBottom: 12,
-    elevation: 2,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   title: {
-    fontWeight: 'bold',
-    color: '#333333',
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    fontWeight: '800',
+    color: colors.white,
+    marginBottom: spacing.lg,
+    letterSpacing: -0.5,
   },
   searchBar: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    elevation: 0,
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    marginBottom: spacing.md,
+    ...shadows.md,
+  },
+  searchInput: {
+    color: colors.gray[900],
   },
   categoriesContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    gap: 8,
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
   },
-  filterChip: {
-    marginRight: 8,
+  categoryChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    marginRight: spacing.sm,
+    ...shadows.sm,
+  },
+  categoryChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.gray[700],
+  },
+  categoryChipTextSelected: {
+    color: colors.white,
   },
   listContent: {
-    padding: 16,
+    padding: spacing.lg,
+    paddingTop: spacing.md,
   },
   serviceCard: {
-    marginBottom: 16,
-    elevation: 2,
+    marginBottom: spacing.md,
   },
-  cardImage: {
-    height: 180,
+  serviceCardGradient: {
+    borderRadius: borderRadius.lg,
+    ...shadows.md,
+    overflow: 'hidden',
+  },
+  serviceCardContent: {
+    flexDirection: 'row',
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  serviceIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  serviceInfo: {
+    flex: 1,
   },
   serviceName: {
-    fontWeight: '600',
-    color: '#333333',
-    marginTop: 12,
-    marginBottom: 8,
+    fontWeight: '700',
+    color: colors.gray[900],
+    marginBottom: spacing.xs,
   },
   serviceDescription: {
-    color: '#666666',
-    marginBottom: 12,
-    lineHeight: 20,
+    color: colors.gray[600],
+    marginBottom: spacing.sm,
+    lineHeight: 18,
   },
   serviceFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: 12,
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  priceContainer: {
+    flexDirection: 'column',
   },
   priceLabel: {
-    color: '#999999',
+    fontSize: 10,
+    color: colors.gray[500],
     marginBottom: 2,
   },
   price: {
-    color: '#2196F3',
-    fontWeight: 'bold',
+    color: colors.primary,
+    fontWeight: '800',
   },
   ratingContainer: {
-    alignItems: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.gray[100],
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
   },
   rating: {
-    color: '#FF9800',
+    color: colors.gray[700],
+    marginLeft: 4,
     fontWeight: '600',
   },
-  ratingCount: {
-    color: '#999999',
-    marginTop: 2,
-  },
-  categoryChip: {
+  categoryBadge: {
     alignSelf: 'flex-start',
-    marginBottom: 8,
+    backgroundColor: colors.primary + '15',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  categoryBadgeText: {
+    fontSize: 11,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  arrowButton: {
+    marginLeft: spacing.sm,
+  },
+  arrowGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: 48,
+    paddingVertical: spacing.xxl * 2,
+    paddingHorizontal: spacing.lg,
   },
   emptyText: {
-    color: '#666666',
-    marginBottom: 8,
+    color: colors.gray[600],
+    marginTop: spacing.md,
+    fontWeight: '600',
   },
   emptySubtext: {
-    color: '#999999',
+    color: colors.gray[500],
+    marginTop: spacing.xs,
+    textAlign: 'center',
   },
   footerLoader: {
-    paddingVertical: 16,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
   },
 });

@@ -10,7 +10,7 @@ import { StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
-import { lightTheme } from './src/theme';
+import { modernTheme, colors } from './src/theme';
 import { RootStackParamList } from './src/navigation/types';
 
 // Auth Screens
@@ -81,8 +81,34 @@ const ResidentTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#2196F3',
-        tabBarInactiveTintColor: '#757575',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.gray[500],
+        tabBarStyle: {
+          backgroundColor: colors.white,
+          borderTopColor: colors.gray[200],
+          borderTopWidth: 1,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          height: 60,
+          paddingBottom: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+        headerStyle: {
+          backgroundColor: colors.backgroundMedium,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTintColor: colors.white,
+        headerTitleStyle: {
+          fontWeight: '700',
+          fontSize: 20,
+        },
         headerShown: true,
       }}
     >
@@ -171,8 +197,34 @@ const SevakTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#2196F3',
-        tabBarInactiveTintColor: '#757575',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.gray[500],
+        tabBarStyle: {
+          backgroundColor: colors.white,
+          borderTopColor: colors.gray[200],
+          borderTopWidth: 1,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          height: 60,
+          paddingBottom: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+        headerStyle: {
+          backgroundColor: colors.backgroundMedium,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTintColor: colors.white,
+        headerTitleStyle: {
+          fontWeight: '700',
+          fontSize: 20,
+        },
         headerShown: true,
       }}
     >
@@ -255,7 +307,7 @@ const RootNavigator = () => {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2196F3" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
@@ -281,12 +333,12 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <PaperProvider theme={lightTheme}>
+        <PaperProvider theme={modernTheme}>
           <AuthProvider>
             <NavigationContainer>
               <RootNavigator />
             </NavigationContainer>
-            <StatusBar style="auto" />
+            <StatusBar style="light" />
           </AuthProvider>
         </PaperProvider>
       </SafeAreaProvider>
@@ -299,30 +351,30 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.backgroundMedium,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666666',
+    color: colors.gray[300],
   },
   placeholder: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.backgroundLight,
     padding: 32,
   },
   placeholderText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2196F3',
+    color: colors.primary,
     marginBottom: 16,
     textAlign: 'center',
   },
   placeholderSubtext: {
     fontSize: 16,
-    color: '#666666',
+    color: colors.gray[600],
     textAlign: 'center',
   },
 });
