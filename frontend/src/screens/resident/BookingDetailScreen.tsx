@@ -6,7 +6,6 @@ import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import * as Clipboard from 'expo-clipboard';
 import { ResidentStackParamList } from '../../navigation/types';
 import { bookingApi } from '../../services/api/booking.api';
 import { Booking } from '../../types';
@@ -91,13 +90,6 @@ export const BookingDetailScreen = () => {
         },
       ]
     );
-  };
-
-  const handleCopyOTP = async () => {
-    if (booking?.checkInOTP) {
-      await Clipboard.setStringAsync(booking.checkInOTP);
-      Alert.alert('Copied!', 'Check-in OTP copied to clipboard');
-    }
   };
 
   const getStatusColor = (status: string) => {
@@ -300,14 +292,6 @@ export const BookingDetailScreen = () => {
                     <View style={styles.otpCodeBox}>
                       <Text style={styles.otpCode}>{booking.checkInOTP}</Text>
                     </View>
-                    <TouchableOpacity
-                      style={styles.copyButton}
-                      onPress={handleCopyOTP}
-                      activeOpacity={0.7}
-                    >
-                      <MaterialCommunityIcons name="content-copy" size={20} color={colors.white} />
-                      <Text style={styles.copyButtonText}>Copy</Text>
-                    </TouchableOpacity>
                   </View>
 
                   <View style={styles.otpFooter}>
@@ -878,18 +862,15 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   otpContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginBottom: spacing.md,
   },
   otpCodeBox: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    flex: 1,
-    marginRight: spacing.md,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl * 2,
   },
   otpCode: {
     fontSize: 32,
@@ -897,22 +878,6 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
     textAlign: 'center',
     color: colors.warning,
-  },
-  copyButton: {
-    backgroundColor: colors.white + '33',
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.white + '66',
-  },
-  copyButtonText: {
-    color: colors.white,
-    fontWeight: '700',
-    fontSize: 14,
   },
   otpFooter: {
     flexDirection: 'row',
