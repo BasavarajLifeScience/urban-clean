@@ -45,6 +45,13 @@ import {
 // Profile Screen
 import { ProfileScreen } from './src/screens/profile';
 
+// Vendor Screens
+import {
+  VendorDashboardScreen,
+  VendorServicesScreen,
+  VendorOrdersScreen,
+} from './src/screens/vendor';
+
 // Placeholder for other screens
 import { Text, View, ActivityIndicator } from 'react-native';
 
@@ -300,7 +307,7 @@ const SevakNavigator = () => {
   );
 };
 
-// Vendor Tab Navigator (Placeholder for now)
+// Vendor Tab Navigator
 const VendorTabs = () => {
   return (
     <Tab.Navigator
@@ -338,34 +345,31 @@ const VendorTabs = () => {
     >
       <Tab.Screen
         name="Dashboard"
+        component={VendorDashboardScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="view-dashboard" size={size} color={color} />
           ),
         }}
-      >
-        {() => <PlaceholderScreen title="Vendor Dashboard - Coming Soon" />}
-      </Tab.Screen>
+      />
       <Tab.Screen
         name="Services"
+        component={VendorServicesScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="room-service" size={size} color={color} />
           ),
         }}
-      >
-        {() => <PlaceholderScreen title="Vendor Services - Coming Soon" />}
-      </Tab.Screen>
+      />
       <Tab.Screen
         name="Orders"
+        component={VendorOrdersScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="clipboard-list" size={size} color={color} />
           ),
         }}
-      >
-        {() => <PlaceholderScreen title="Vendor Orders - Coming Soon" />}
-      </Tab.Screen>
+      />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}

@@ -9,6 +9,7 @@ const bookingRoutes = require('./booking.routes');
 const paymentRoutes = require('./payment.routes');
 const ratingRoutes = require('./rating.routes');
 const sevakRoutes = require('./sevak.routes');
+const vendorRoutes = require('./vendor.routes');
 const notificationRoutes = require('./notification.routes');
 
 // Mount routes
@@ -19,6 +20,7 @@ router.use('/bookings', bookingRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/ratings', ratingRoutes);
 router.use('/sevak', sevakRoutes);
+router.use('/vendor', vendorRoutes);
 router.use('/notifications', notificationRoutes);
 
 // Health check route
