@@ -233,13 +233,19 @@ export default function BookingsPage() {
                     <div className="flex items-center">
                       <User className="h-8 w-8 rounded-full bg-gray-200 p-1 text-gray-600" />
                       <div className="ml-3">
-                        <div className="text-sm font-medium text-gray-900">{booking.resident.fullName}</div>
-                        <div className="text-sm text-gray-500">{booking.resident.email}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {booking.resident?.fullName || 'Unknown'}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {booking.resident?.email || '-'}
+                        </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{booking.service.name}</div>
+                    <div className="text-sm text-gray-900">
+                      {booking.service?.name || 'Unknown Service'}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900">
@@ -319,11 +325,15 @@ export default function BookingsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-gray-600">Service</p>
-                    <p className="text-sm font-medium text-gray-900">{selectedBooking.service.name}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {selectedBooking.service?.name || 'Unknown Service'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-600">Customer</p>
-                    <p className="text-sm font-medium text-gray-900">{selectedBooking.resident.fullName}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {selectedBooking.resident?.fullName || 'Unknown'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-600">Schedule</p>
