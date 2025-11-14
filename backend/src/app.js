@@ -22,39 +22,30 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
-// CORS configuration
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['*'];
-logger.info(`🌐 [CORS] Allowed origins: ${JSON.stringify(allowedOrigins)}`);
+// CORS configuration - completely disabled for development
+if (process.env.NODE_ENV === 'development') {
+  logger.info('🌐 [CORS] Development mode - CORS completely disabled, allowing all origins');
+  app.use(cors());
+} else {
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['*'];
+  logger.info(`🌐 [CORS] Production mode - Allowed origins: ${JSON.stringify(allowedOrigins)}`);
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    logger.info(`🌐 [CORS] Request from origin: ${origin || 'no origin (mobile/native app)'}`);
+  const corsOptions = {
+    origin: (origin, callback) => {
+      logger.info(`🌐 [CORS] Request from origin: ${origin || 'no origin'}`);
 
-    // Allow requests with no origin (like mobile apps, Postman, curl)
-    if (!origin) {
-      logger.info('✅ [CORS] Allowing request with no origin header');
-      return callback(null, true);
-    }
+      if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
 
-    // If ALLOWED_ORIGINS is '*', allow all
-    if (allowedOrigins.includes('*')) {
-      logger.info('✅ [CORS] Allowing all origins (wildcard)');
-      return callback(null, true);
-    }
-
-    // Check if origin is in allowed list
-    if (allowedOrigins.includes(origin)) {
-      logger.info(`✅ [CORS] Origin ${origin} is in allowed list`);
-      return callback(null, true);
-    }
-
-    logger.warn(`❌ [CORS] Origin ${origin} not allowed`);
-    callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-  optionsSuccessStatus: 200,
-};
-app.use(cors(corsOptions));
+      logger.warn(`❌ [CORS] Origin ${origin} not allowed`);
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    optionsSuccessStatus: 200,
+  };
+  app.use(cors(corsOptions));
+}
 
 // Compression
 app.use(compression());
