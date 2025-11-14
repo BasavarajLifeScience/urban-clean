@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, FlatList, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { Text, Searchbar, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -7,7 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
-import { serviceApi } from '../../services/api';
+import { serviceApi } from '../../services/api/service.api';
 import { Service } from '../../types';
 import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
@@ -35,12 +35,26 @@ export const ServicesListScreen = () => {
 
   const loadCategories = async () => {
     try {
+      console.log('📋 [ServicesListScreen] Loading categories...');
       const response = await serviceApi.getCategories();
+      console.log('📥 [ServicesListScreen] Categories response:', response);
+
       if (response.success && response.data) {
-        setCategories(response.data.map((cat: any) => cat.name));
+        const categoryNames = response.data.categories?.map((cat: any) => cat.name) || [];
+        setCategories(categoryNames);
+        console.log('✅ [ServicesListScreen] Categories loaded:', categoryNames);
       }
-    } catch (error) {
-      console.error('Error loading categories:', error);
+    } catch (error: any) {
+      console.error('❌ [ServicesListScreen] Error loading categories:', error);
+      console.error('❌ [ServicesListScreen] Error details:', {
+        message: error.message,
+        response: error.response?.data,
+      });
+      Alert.alert(
+        'Error Loading Categories',
+        error.response?.data?.message || error.message || 'Unable to load categories',
+        [{ text: 'OK' }]
+      );
     }
   };
 
@@ -64,10 +78,13 @@ export const ServicesListScreen = () => {
         params.search = searchQuery;
       }
 
+      console.log('📋 [ServicesListScreen] Loading services with params:', params);
       const response = await serviceApi.getServices(params);
+      console.log('📥 [ServicesListScreen] Services response:', response);
 
       if (response.success && response.data) {
         const newServices = Array.isArray(response.data) ? response.data : response.data.services || [];
+        console.log('✅ [ServicesListScreen] Services loaded:', newServices.length);
 
         if (reset) {
           setServices(newServices);
@@ -77,8 +94,17 @@ export const ServicesListScreen = () => {
 
         setHasMore(newServices.length === 10);
       }
-    } catch (error) {
-      console.error('Error loading services:', error);
+    } catch (error: any) {
+      console.error('❌ [ServicesListScreen] Error loading services:', error);
+      console.error('❌ [ServicesListScreen] Error details:', {
+        message: error.message,
+        response: error.response?.data,
+      });
+      Alert.alert(
+        'Error Loading Services',
+        error.response?.data?.message || error.message || 'Unable to load services',
+        [{ text: 'OK' }]
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -290,9 +316,7 @@ export const ServicesListScreen = () => {
                   No services found
                 </Text>
                 <Text variant="bodyMedium" style={styles.emptySubtext}>
-                  {searchQuery || selectedCategory
-                    ? 'Try adjusting your filters or search query'
-                    : 'No services are currently available'}
+                  Try adjusting your filters or search query
                 </Text>
               </View>
             }

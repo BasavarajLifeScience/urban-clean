@@ -8,7 +8,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
-import { serviceApi, bookingApi } from '../../services/api';
+import { serviceApi } from '../../services/api/service.api';
+import { bookingApi } from '../../services/api/booking.api';
 import { Service, Booking } from '../../types';
 import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
@@ -129,7 +130,10 @@ export const ResidentHomeScreen = () => {
                     {user?.fullName || 'User'}
                   </Text>
                 </View>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => {
+                  console.log('🧑 [ResidentHomeScreen] Navigating to Profile');
+                  navigation.navigate('ResidentTabs', { screen: 'Profile' });
+                }}>
                   <LinearGradient
                     colors={[colors.primary, colors.primaryDark]}
                     style={styles.avatarGradient}
@@ -166,7 +170,10 @@ export const ResidentHomeScreen = () => {
                 <Text variant="titleLarge" style={styles.sectionTitle}>
                   Categories
                 </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Services')}>
+                <TouchableOpacity onPress={() => {
+                  console.log('📂 [ResidentHomeScreen] Navigating to Services');
+                  navigation.navigate('ResidentTabs', { screen: 'Services' });
+                }}>
                   <Text style={styles.viewAllLink}>View All</Text>
                 </TouchableOpacity>
               </View>
@@ -180,7 +187,10 @@ export const ResidentHomeScreen = () => {
                   <TouchableOpacity
                     key={index}
                     style={styles.categoryCard}
-                    onPress={() => navigation.navigate('Services')}
+                    onPress={() => {
+                      console.log(`📁 [ResidentHomeScreen] Category selected: ${category.name}`);
+                      navigation.navigate('ResidentTabs', { screen: 'Services' });
+                    }}
                   >
                     <LinearGradient
                       colors={category.gradient}
@@ -208,7 +218,10 @@ export const ResidentHomeScreen = () => {
                 <Text variant="titleLarge" style={styles.sectionTitle}>
                   Featured Services
                 </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Services')}>
+                <TouchableOpacity onPress={() => {
+                  console.log('🛠️ [ResidentHomeScreen] Navigating to all Services');
+                  navigation.navigate('ResidentTabs', { screen: 'Services' });
+                }}>
                   <Text style={styles.viewAllLink}>View All</Text>
                 </TouchableOpacity>
               </View>
@@ -218,7 +231,10 @@ export const ResidentHomeScreen = () => {
                   <TouchableOpacity
                     key={service._id}
                     style={styles.serviceCard}
-                    onPress={() => navigation.navigate('ServiceDetail', { serviceId: service._id })}
+                    onPress={() => {
+                      console.log(`🔧 [ResidentHomeScreen] Navigating to service: ${service._id}`);
+                      navigation.navigate('ServiceDetail', { serviceId: service._id });
+                    }}
                   >
                     <LinearGradient
                       colors={[colors.white, colors.gray[50]]}
@@ -310,18 +326,14 @@ export const ResidentHomeScreen = () => {
                 <Text variant="titleLarge" style={styles.sectionTitle}>
                   Recent Bookings
                 </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Bookings')}>
+                <TouchableOpacity>
                   <Text style={styles.viewAllLink}>View All</Text>
                 </TouchableOpacity>
               </View>
 
               {recentBookings.length > 0 ? (
                 recentBookings.map((booking) => (
-                  <TouchableOpacity
-                    key={booking._id}
-                    style={styles.bookingCard}
-                    onPress={() => navigation.navigate('BookingDetail', { bookingId: booking._id })}
-                  >
+                  <TouchableOpacity key={booking._id} style={styles.bookingCard}>
                     <LinearGradient
                       colors={[colors.white, colors.gray[50]]}
                       style={styles.bookingCardGradient}
@@ -407,7 +419,9 @@ export const ResidentHomeScreen = () => {
           >
             <TouchableOpacity
               style={styles.fabTouchable}
-              onPress={() => navigation.navigate('Services')}
+              onPress={() => {
+                // Navigate to services screen
+              }}
             >
               <MaterialCommunityIcons name="plus" size={24} color={colors.white} />
               <Text style={styles.fabLabel}>New Booking</Text>
