@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity, ScrollView } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { ResidentStackParamList } from '../../navigation/types';
+import { ResidentStackParamList, ResidentTabParamList } from '../../navigation/types';
 import { bookingApi } from '../../services/api/booking.api';
 import { Booking } from '../../types';
 import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
-type MyBookingsScreenNavigationProp = NativeStackNavigationProp<ResidentStackParamList>;
+type MyBookingsScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<ResidentTabParamList, 'Bookings'>,
+  NativeStackNavigationProp<ResidentStackParamList>
+>;
 
 export const MyBookingsScreen = () => {
   const navigation = useNavigation<MyBookingsScreenNavigationProp>();
@@ -32,6 +37,14 @@ export const MyBookingsScreen = () => {
     loadBookings();
   }, []);
 
+  // Reload bookings when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('🔄 [MyBookingsScreen] Screen focused - Reloading bookings');
+      loadBookings();
+    }, [])
+  );
+
   useEffect(() => {
     filterBookings();
   }, [selectedStatus, bookings]);
@@ -39,14 +52,22 @@ export const MyBookingsScreen = () => {
   const loadBookings = async () => {
     try {
       setLoading(true);
+      console.log('📋 [MyBookingsScreen] Loading bookings...');
       const response = await bookingApi.getMyBookings({});
+      console.log('📥 [MyBookingsScreen] Response:', response);
 
       if (response.success && response.data) {
-        const bookingsList = response.data.bookings || [];
+        const bookingsList = response.data.bookings || response.data.data || response.data || [];
+        console.log('✅ [MyBookingsScreen] Bookings loaded:', bookingsList.length);
+        console.log('📋 [MyBookingsScreen] First booking:', bookingsList[0]);
         setBookings(bookingsList);
       }
-    } catch (error) {
-      console.error('Error loading bookings:', error);
+    } catch (error: any) {
+      console.error('❌ [MyBookingsScreen] Error loading bookings:', error);
+      console.error('❌ [MyBookingsScreen] Error details:', {
+        message: error.message,
+        response: error.response?.data,
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -131,7 +152,7 @@ export const MyBookingsScreen = () => {
             </View>
 
             <Text variant="bodyMedium" style={styles.serviceName} numberOfLines={1}>
-              {item.service?.name || 'Service'}
+              {typeof item.serviceId === 'object' ? item.serviceId.name : 'Service'}
             </Text>
 
             <View style={styles.bookingDetails}>
@@ -224,11 +245,16 @@ export const MyBookingsScreen = () => {
             </Text>
 
             {/* Status Filter Pills */}
-            <View style={styles.filtersContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filtersContainer}
+            >
               {statusFilters.map((filter) => (
                 <TouchableOpacity
                   key={filter.value}
                   onPress={() => setSelectedStatus(filter.value)}
+                  style={styles.filterPillTouchable}
                 >
                   <LinearGradient
                     colors={
@@ -256,7 +282,7 @@ export const MyBookingsScreen = () => {
                   </LinearGradient>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
           </View>
 
           <FlatList
@@ -295,7 +321,8 @@ export const MyBookingsScreen = () => {
           <TouchableOpacity
             style={styles.fab}
             onPress={() => {
-              navigation.navigate('ResidentTabs', { screen: 'Services' } as any);
+              console.log('➕ [MyBookingsScreen] FAB clicked - Navigating to Services');
+              navigation.navigate('Services');
             }}
           >
             <LinearGradient
@@ -348,6 +375,10 @@ const styles = StyleSheet.create({
   filtersContainer: {
     flexDirection: 'row',
     gap: spacing.sm,
+    paddingRight: spacing.lg,
+  },
+  filterPillTouchable: {
+    marginRight: spacing.xs,
   },
   filterPill: {
     flexDirection: 'row',
