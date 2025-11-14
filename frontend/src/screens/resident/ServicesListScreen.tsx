@@ -290,9 +290,9 @@ export const ServicesListScreen = () => {
                   No services found
                 </Text>
                 <Text variant="bodyMedium" style={styles.emptySubtext}>
-                  {selectedStatus === 'all'
+                  {searchQuery || selectedCategory
                     ? 'Try adjusting your filters or search query'
-                    : `No services match your criteria`}
+                    : 'No services are currently available'}
                 </Text>
               </View>
             }
