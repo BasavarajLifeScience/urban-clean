@@ -511,11 +511,18 @@ const acceptJob = async (req, res, next) => {
 
     const booking = await Booking.findById(jobId)
       .populate('serviceId')
-      .populate('residentId', 'fullName phoneNumber');
+      .populate('residentId', '_id fullName phoneNumber');
 
     if (!booking) {
       throw new NotFoundError('Job not found');
     }
+
+    console.log('📋 [Sevak] Booking found:', {
+      bookingId: booking._id,
+      residentId: booking.residentId,
+      currentSevakId: booking.sevakId,
+      status: booking.status,
+    });
 
     // Check if job is still available
     if (booking.sevakId) {
@@ -543,8 +550,12 @@ const acceptJob = async (req, res, next) => {
 
     // Create notification for resident
     const Notification = require('../models/Notification');
+    const residentUserId = booking.residentId._id || booking.residentId;
+
+    console.log('📬 [Sevak] Creating notification for resident:', residentUserId);
+
     await Notification.create({
-      userId: booking.residentId._id,
+      userId: residentUserId,
       type: 'booking',
       title: 'Sevak Assigned',
       message: `A service provider has been assigned to your booking #${booking.bookingNumber}`,
