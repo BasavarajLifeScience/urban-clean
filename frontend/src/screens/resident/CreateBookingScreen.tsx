@@ -51,16 +51,24 @@ export const CreateBookingScreen = () => {
   const loadServiceAndSlots = async () => {
     try {
       setLoading(true);
+      console.log('📋 [CreateBookingScreen] Loading service:', serviceId);
       const response = await serviceApi.getServiceById(serviceId);
+      console.log('📥 [CreateBookingScreen] Service response:', response);
 
       if (response.success && response.data) {
-        setService(response.data);
+        // Extract service from response.data.service
+        const serviceData = response.data.service || response.data;
+        console.log('✅ [CreateBookingScreen] Service loaded:', serviceData.name);
+        setService(serviceData);
       }
 
       await loadAvailableSlots();
-    } catch (error) {
-      console.error('Error loading service:', error);
-      Alert.alert('Error', 'Unable to load service details.');
+    } catch (error: any) {
+      console.error('❌ [CreateBookingScreen] Error loading service:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || error.message || 'Unable to load service details.'
+      );
     } finally {
       setLoading(false);
     }
@@ -69,21 +77,22 @@ export const CreateBookingScreen = () => {
   const loadAvailableSlots = async () => {
     try {
       const dateStr = selectedDate.toISOString().split('T')[0];
-      const response = await bookingApi.getAvailableSlots({
-        serviceId,
-        date: dateStr,
-      });
+      console.log('📅 [CreateBookingScreen] Loading slots for:', { serviceId, date: dateStr });
+      const response = await bookingApi.getAvailableSlots(serviceId, dateStr);
+      console.log('✅ [CreateBookingScreen] Slots response:', response);
 
       if (response.success && response.data) {
         setAvailableSlots(response.data.availableSlots || []);
+        console.log('📋 [CreateBookingScreen] Available slots:', response.data.availableSlots);
       }
     } catch (error) {
-      console.error('Error loading slots:', error);
+      console.error('❌ [CreateBookingScreen] Error loading slots:', error);
       // Set default slots if API fails
       setAvailableSlots([
         '09:00', '10:00', '11:00', '12:00',
         '14:00', '15:00', '16:00', '17:00',
       ]);
+      console.log('⚠️ [CreateBookingScreen] Using default time slots');
     }
   };
 
@@ -128,9 +137,14 @@ export const CreateBookingScreen = () => {
         specialInstructions,
       };
 
+      console.log('📤 [CreateBookingScreen] Creating booking:', bookingData);
       const response = await bookingApi.createBooking(bookingData);
+      console.log('✅ [CreateBookingScreen] Booking created:', response);
 
       if (response.success) {
+        const bookingId = response.data.booking?._id || response.data._id;
+        console.log('🎉 [CreateBookingScreen] Booking ID:', bookingId);
+
         Alert.alert(
           'Success',
           'Booking created successfully!',
@@ -139,7 +153,7 @@ export const CreateBookingScreen = () => {
               text: 'OK',
               onPress: () => {
                 navigation.navigate('BookingDetail', {
-                  bookingId: response.data._id,
+                  bookingId,
                 });
               },
             },
@@ -147,9 +161,10 @@ export const CreateBookingScreen = () => {
         );
       }
     } catch (error: any) {
+      console.error('❌ [CreateBookingScreen] Booking failed:', error);
       Alert.alert(
         'Booking Failed',
-        error.response?.data?.message || 'Unable to create booking. Please try again.'
+        error.response?.data?.message || error.message || 'Unable to create booking. Please try again.'
       );
     } finally {
       setSubmitting(false);
