@@ -40,3 +40,14 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+// Re-export all API modules
+export { authApi } from './api/auth.api';
+export { serviceApi } from './api/service.api';
+export { bookingApi } from './api/booking.api';
+export { userApi } from './api/user.api';
+export { paymentApi } from './api/payment.api';
+export { ratingApi } from './api/rating.api';
+export { notificationApi } from './api/notification.api';
+export { sevakApi } from './api/sevak.api';
+
