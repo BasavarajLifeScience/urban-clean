@@ -87,7 +87,7 @@ const getMyBookings = async (req, res, next) => {
 const getBookingById = async (req, res, next) => {
   try {
     const { bookingId } = req.params;
-    const userId = req.user.userId;
+    const userId = req.user.userId.toString(); // Convert ObjectId to string for comparison
 
     const booking = await Booking.findById(bookingId)
       .populate('serviceId')
@@ -149,7 +149,7 @@ const getBookingById = async (req, res, next) => {
 const rescheduleBooking = async (req, res, next) => {
   try {
     const { bookingId } = req.params;
-    const userId = req.user.userId;
+    const userId = req.user.userId.toString(); // Convert ObjectId to string for comparison
     const { newDate, newTime } = req.body;
 
     const booking = await Booking.findById(bookingId);
@@ -196,7 +196,7 @@ const rescheduleBooking = async (req, res, next) => {
 const cancelBooking = async (req, res, next) => {
   try {
     const { bookingId } = req.params;
-    const userId = req.user.userId;
+    const userId = req.user.userId.toString(); // Convert ObjectId to string for comparison
     const { reason } = req.body;
 
     const booking = await Booking.findById(bookingId);

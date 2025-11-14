@@ -73,7 +73,7 @@ const getJobs = async (req, res, next) => {
  */
 const getJobDetails = async (req, res, next) => {
   try {
-    const sevakId = req.user.userId;
+    const sevakId = req.user.userId.toString(); // Convert ObjectId to string for comparison
     const { jobId } = req.params;
 
     const job = await Booking.findById(jobId)
@@ -104,7 +104,7 @@ const getJobDetails = async (req, res, next) => {
  */
 const checkIn = async (req, res, next) => {
   try {
-    const sevakId = req.user.userId;
+    const sevakId = req.user.userId.toString(); // Convert ObjectId to string for comparison
     const { bookingId, otp, location } = req.body;
 
     const booking = await Booking.findById(bookingId);
@@ -153,7 +153,7 @@ const checkIn = async (req, res, next) => {
  */
 const checkOut = async (req, res, next) => {
   try {
-    const sevakId = req.user.userId;
+    const sevakId = req.user.userId.toString(); // Convert ObjectId to string for comparison
     const { bookingId, location } = req.body;
 
     const booking = await Booking.findById(bookingId);
@@ -197,7 +197,7 @@ const checkOut = async (req, res, next) => {
  */
 const completeJob = async (req, res, next) => {
   try {
-    const sevakId = req.user.userId;
+    const sevakId = req.user.userId.toString(); // Convert ObjectId to string for comparison
     const { bookingId } = req.params;
     const { completionNotes, checklistItems } = req.body;
 
@@ -260,7 +260,7 @@ const completeJob = async (req, res, next) => {
  */
 const reportIssue = async (req, res, next) => {
   try {
-    const sevakId = req.user.userId;
+    const sevakId = req.user.userId.toString(); // Convert ObjectId to string for comparison
     const { bookingId } = req.params;
     const { issueType, description } = req.body;
 
