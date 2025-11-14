@@ -67,8 +67,8 @@ const getMyBookings = async (req, res, next) => {
     }
 
     const bookings = await Booking.find(query)
-      .populate('serviceId', 'name category imageUrl basePrice')
-      .populate('sevakId', 'fullName phoneNumber')
+      .populate('serviceId', '_id name category imageUrl basePrice')
+      .populate('sevakId', '_id fullName phoneNumber')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNum);
@@ -91,8 +91,8 @@ const getBookingById = async (req, res, next) => {
 
     const booking = await Booking.findById(bookingId)
       .populate('serviceId')
-      .populate('sevakId', 'fullName phoneNumber email')
-      .populate('residentId', 'fullName phoneNumber email');
+      .populate('sevakId', '_id fullName phoneNumber email')
+      .populate('residentId', '_id fullName phoneNumber email');
 
     if (!booking) {
       throw new NotFoundError('Booking not found');

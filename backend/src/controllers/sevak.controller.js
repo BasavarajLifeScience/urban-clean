@@ -31,8 +31,8 @@ const getJobs = async (req, res, next) => {
     }
 
     const jobs = await Booking.find(query)
-      .populate('serviceId', 'name category basePrice')
-      .populate('residentId', 'fullName phoneNumber')
+      .populate('serviceId', '_id name category basePrice')
+      .populate('residentId', '_id fullName phoneNumber')
       .sort({ scheduledDate: 1, scheduledTime: 1 })
       .skip(skip)
       .limit(limitNum);
@@ -78,7 +78,7 @@ const getJobDetails = async (req, res, next) => {
 
     const job = await Booking.findById(jobId)
       .populate('serviceId')
-      .populate('residentId', 'fullName phoneNumber email');
+      .populate('residentId', '_id fullName phoneNumber email');
 
     if (!job) {
       throw new NotFoundError('Job not found');
