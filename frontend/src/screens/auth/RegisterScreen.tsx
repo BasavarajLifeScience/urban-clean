@@ -90,7 +90,9 @@ export const RegisterScreen = () => {
 
       // Navigate to OTP screen
       console.log('🔄 [RegisterScreen] Navigating to OTP verification screen');
+      console.log('📋 [RegisterScreen] Passing userId:', result.userId);
       navigation.navigate('OTPVerification', {
+        userId: result.userId,
         phoneNumber: data.phoneNumber,
         email: data.email,
       });

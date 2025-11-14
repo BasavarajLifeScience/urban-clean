@@ -23,7 +23,7 @@ export const OTPVerificationScreen = () => {
   const [resendTimer, setResendTimer] = useState(60);
   const inputRefs = useRef<(RNTextInput | null)[]>([]);
 
-  const { phoneNumber, email } = route.params || {};
+  const { userId, phoneNumber, email } = route.params || { userId: '' };
 
   useEffect(() => {
     // Focus first input on mount
@@ -77,14 +77,28 @@ export const OTPVerificationScreen = () => {
       return;
     }
 
+    console.log('🔐 [OTPVerificationScreen] Verifying OTP...');
+    console.log('📋 [OTPVerificationScreen] Data:', {
+      userId,
+      otp: otpCode,
+      phoneNumber,
+      email,
+    });
+
     try {
       setLoading(true);
       await verifyOTP({
-        phoneNumber: phoneNumber || '',
+        userId,
         otp: otpCode,
       });
+      console.log('✅ [OTPVerificationScreen] OTP verified successfully!');
       // Navigation will be handled automatically by AuthContext
     } catch (error: any) {
+      console.error('❌ [OTPVerificationScreen] OTP verification failed:', error);
+      console.error('❌ [OTPVerificationScreen] Error details:', {
+        message: error.message,
+        response: error.response?.data,
+      });
       Alert.alert(
         'Verification Failed',
         error.response?.data?.message || 'Invalid OTP. Please try again.',
