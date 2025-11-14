@@ -398,8 +398,8 @@ const getAllBookings = async (req, res, next) => {
     const query = {};
 
     if (status) query.status = status;
-    if (sevakId) query.sevak = sevakId;
-    if (residentId) query.resident = residentId;
+    if (sevakId) query.sevakId = sevakId;  // Fixed: was query.sevak
+    if (residentId) query.residentId = residentId;  // Fixed: was query.resident
 
     if (dateFrom || dateTo) {
       query.scheduledDate = {};
@@ -409,19 +409,34 @@ const getAllBookings = async (req, res, next) => {
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
+    console.log('📋 [Admin] Fetching bookings with query:', query);
+
     const [bookings, totalCount] = await Promise.all([
       Booking.find(query)
-        .populate('resident', 'fullName email phoneNumber')
-        .populate('sevak', 'fullName email phoneNumber')
-        .populate('service', 'name basePrice')
+        .populate('residentId', '_id fullName email phoneNumber')  // Fixed: was 'resident'
+        .populate('sevakId', '_id fullName email phoneNumber')  // Fixed: was 'sevak'
+        .populate('serviceId', '_id name basePrice')  // Fixed: was 'service'
         .skip(skip)
         .limit(parseInt(limit))
         .sort({ createdAt: -1 }),
       Booking.countDocuments(query),
     ]);
 
+    console.log('✅ [Admin] Found bookings:', bookings.length);
+
+    // Transform the data to match frontend expectations
+    const transformedBookings = bookings.map(booking => {
+      const bookingObj = booking.toObject();
+      return {
+        ...bookingObj,
+        resident: bookingObj.residentId,
+        sevak: bookingObj.sevakId,
+        service: bookingObj.serviceId,
+      };
+    });
+
     return sendSuccess(res, 200, 'Bookings retrieved successfully', {
-      bookings,
+      bookings: transformedBookings,
       totalCount,
       currentPage: parseInt(page),
       totalPages: Math.ceil(totalCount / parseInt(limit)),
@@ -455,12 +470,27 @@ const assignSevakToBooking = async (req, res, next) => {
       throw new ValidationError('Cannot assign blacklisted sevak');
     }
 
-    const previousSevakId = booking.sevak;
+    const previousSevakId = booking.sevakId;  // Fixed: was booking.sevak
 
-    booking.sevak = sevakId;
+    console.log('📋 [Admin] Assigning sevak to booking:', {
+      bookingId,
+      sevakId,
+      previousSevakId: previousSevakId?.toString(),
+      status: booking.status,
+    });
+
+    booking.sevakId = sevakId;  // Fixed: was booking.sevak
     booking.assignedBy = req.user.userId;
     booking.status = 'assigned';
+    booking.timeline = booking.timeline || [];
+    booking.timeline.push({
+      status: 'assigned',
+      timestamp: new Date(),
+      notes: notes || 'Assigned by admin',
+    });
     await booking.save();
+
+    console.log('✅ [Admin] Sevak assigned successfully');
 
     // Create assignment history
     await AssignmentHistory.create({
