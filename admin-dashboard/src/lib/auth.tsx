@@ -68,8 +68,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       console.error('Login error caught:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
-      throw new Error(errorMessage);
+
+      // Handle specific error cases
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        throw new Error('Cannot connect to backend API. Please ensure the backend server is running on port 5001.');
+      }
+
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || error.response.data?.error?.message;
+
+        if (status === 401) {
+          throw new Error(message || 'Invalid credentials or admin code. Please check your email, password, and admin code.');
+        } else if (status === 404) {
+          throw new Error('Admin login endpoint not found. Please ensure the backend is running.');
+        } else if (status === 500) {
+          throw new Error('Server error. Please check backend logs and database connection.');
+        } else {
+          throw new Error(message || `Login failed with status ${status}`);
+        }
+      }
+
+      throw new Error(error.message || 'Login failed. Please try again.');
     }
   };
 

@@ -95,10 +95,13 @@ Admin Code: SA001
 - Verify CORS is enabled in backend (should be enabled by default in development)
 - Check that the API URL in `.env.local` matches your backend configuration
 
-**Invalid credentials:**
+**Invalid credentials (401 error):**
+- **Most common cause**: Admin user not seeded in database
+  - Solution: Run `cd backend && npm run seed` to create the admin user
 - Ensure you're using the correct demo credentials (see Login Credentials above)
-- Verify the admin user exists in the database
+- Verify the backend is connected to MongoDB
 - Check admin code is uppercase (SA001)
+- If using Docker: Make sure to run seed inside the container: `docker-compose exec backend npm run seed`
 
 ### API Endpoints
 
