@@ -72,13 +72,17 @@ export const BookingDetailScreen = () => {
           onPress: async () => {
             try {
               setActionLoading(true);
-              await bookingApi.cancelBooking(bookingId, {
-                reason: 'Cancelled by user',
-              });
+              console.log('🚫 [BookingDetailScreen] Cancelling booking:', bookingId);
+              await bookingApi.cancelBooking(bookingId, 'Cancelled by user');
+              console.log('✅ [BookingDetailScreen] Booking cancelled successfully');
               Alert.alert('Success', 'Booking cancelled successfully');
               loadBookingDetail();
-            } catch (error) {
-              Alert.alert('Error', 'Unable to cancel booking');
+            } catch (error: any) {
+              console.error('❌ [BookingDetailScreen] Cancel failed:', error);
+              Alert.alert(
+                'Error',
+                error.response?.data?.message || error.message || 'Unable to cancel booking'
+              );
             } finally {
               setActionLoading(false);
             }
