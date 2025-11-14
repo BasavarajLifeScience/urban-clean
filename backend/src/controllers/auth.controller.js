@@ -12,15 +12,29 @@ const logger = require('../utils/logger');
  * Register new user
  */
 const register = async (req, res, next) => {
+  logger.info('🎯 [Auth Controller] Registration request received');
+  logger.info(`📋 [Auth Controller] Request data: ${JSON.stringify({
+    phoneNumber: req.body.phoneNumber,
+    email: req.body.email,
+    role: req.body.role,
+    fullName: req.body.fullName,
+    hasPassword: !!req.body.password,
+  })}`);
+
   try {
     const { phoneNumber, email, password, role, fullName } = req.body;
+
+    logger.info(`🔍 [Auth Controller] Checking for existing user with email: ${email} or phone: ${phoneNumber}`);
 
     // Check if user already exists
     const existingUser = await User.findOne({ $or: [{ email }, { phoneNumber }] });
 
     if (existingUser) {
+      logger.warn(`⚠️ [Auth Controller] User already exists - email: ${email}, phone: ${phoneNumber}`);
       throw new ConflictError('User already exists with this email or phone number');
     }
+
+    logger.info('✅ [Auth Controller] No existing user found, creating new user...');
 
     // Create user
     const user = await User.create({
@@ -31,22 +45,29 @@ const register = async (req, res, next) => {
       fullName,
     });
 
+    logger.info(`✅ [Auth Controller] User created successfully with ID: ${user._id}`);
+
     // Create empty profile
     await Profile.create({ userId: user._id });
+    logger.info(`✅ [Auth Controller] Profile created for user: ${user._id}`);
 
     // Create notification settings with defaults
     await NotificationSettings.create({ userId: user._id });
+    logger.info(`✅ [Auth Controller] Notification settings created for user: ${user._id}`);
 
     // Generate OTP
     const { otp } = await createOTP(user._id, 'registration');
 
-    logger.info(`User registered: ${user._id}, OTP: ${otp}`);
+    logger.info(`✅ [Auth Controller] User registered successfully: ${user._id}, OTP: ${otp}`);
+    logger.info(`📤 [Auth Controller] Sending success response for user: ${user._id}`);
 
     return sendSuccess(res, 201, 'User registered successfully. OTP sent for verification.', {
       userId: user._id,
       otp: process.env.NODE_ENV === 'development' ? otp : undefined,
     });
   } catch (error) {
+    logger.error('❌ [Auth Controller] Registration error:', error.message);
+    logger.error('❌ [Auth Controller] Error stack:', error.stack);
     next(error);
   }
 };
