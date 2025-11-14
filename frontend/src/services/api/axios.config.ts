@@ -1,13 +1,34 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-const API_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:5001/api/v1';
+// Determine API URL based on platform
+const getApiUrl = () => {
+  // Check if custom API URL is provided in app.json
+  if (Constants.expoConfig?.extra?.apiUrl) {
+    return Constants.expoConfig.extra.apiUrl;
+  }
+
+  // Default URLs based on platform
+  // Android emulator needs 10.0.2.2 to access host machine's localhost
+  // iOS simulator can use localhost
+  // Web uses localhost
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:5001/api/v1';
+  }
+
+  return 'http://localhost:5001/api/v1';
+};
+
+const API_URL = getApiUrl();
+
+console.log('🔗 API URL configured:', API_URL, '| Platform:', Platform.OS);
 
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 10000,
+  timeout: 30000, // Increased timeout for mobile devices
   headers: {
     'Content-Type': 'application/json',
   },
@@ -16,9 +37,13 @@ const api = axios.create({
 // Request interceptor - attach token
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    const token = await SecureStore.getItemAsync('accessToken');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const token = await SecureStore.getItemAsync('accessToken');
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (error) {
+      console.error('Error getting token:', error);
     }
     return config;
   },
@@ -29,8 +54,22 @@ api.interceptors.request.use(
 
 // Response interceptor - handle errors & token refresh
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Log successful requests in development
+    if (__DEV__) {
+      console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    }
+    return response;
+  },
   async (error: AxiosError) => {
+    // Log errors in development
+    if (__DEV__) {
+      console.error(`❌ ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response?.status || 'Network Error'}`);
+      if (error.response?.data) {
+        console.error('Error details:', error.response.data);
+      }
+    }
+
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // Token expired - refresh
