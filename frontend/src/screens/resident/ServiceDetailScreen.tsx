@@ -38,7 +38,30 @@ export const ServiceDetailScreen = () => {
         // Extract service from response.data.service
         const serviceData = response.data.service || response.data;
         console.log('✅ [ServiceDetailScreen] Service data:', serviceData);
+        console.log('📋 [ServiceDetailScreen] Service fields:', {
+          name: serviceData.name,
+          description: serviceData.description,
+          category: serviceData.category,
+          subcategory: serviceData.subcategory,
+          basePrice: serviceData.basePrice,
+          priceUnit: serviceData.priceUnit,
+          duration: serviceData.duration,
+          isActive: serviceData.isActive,
+          features: serviceData.features,
+          faqs: serviceData.faqs,
+          tags: serviceData.tags,
+          averageRating: serviceData.averageRating,
+          totalRatings: serviceData.totalRatings,
+          bookingCount: serviceData.bookingCount,
+          imageUrl: serviceData.imageUrl,
+        });
         setService(serviceData);
+      } else {
+        console.error('❌ [ServiceDetailScreen] Invalid response structure:', {
+          success: response.success,
+          hasData: !!response.data,
+          dataKeys: response.data ? Object.keys(response.data) : [],
+        });
       }
     } catch (error: any) {
       console.error('❌ [ServiceDetailScreen] Error loading service:', error);
