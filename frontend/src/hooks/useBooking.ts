@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { bookingApi } from '../services/api';
+import { bookingApi } from '../services/api/booking.api';
 import { Booking } from '../types';
 
 export const useBooking = () => {

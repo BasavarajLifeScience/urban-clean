@@ -7,7 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
-import { serviceApi } from '../../services/api';
+import { serviceApi } from '../../services/api/service.api';
 import { Service } from '../../types';
 import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
@@ -30,14 +30,50 @@ export const ServiceDetailScreen = () => {
   const loadServiceDetail = async () => {
     try {
       setLoading(true);
+      console.log('📋 [ServiceDetailScreen] Loading service:', serviceId);
       const response = await serviceApi.getServiceById(serviceId);
+      console.log('📥 [ServiceDetailScreen] API Response:', response);
 
       if (response.success && response.data) {
-        setService(response.data);
+        // Extract service from response.data.service
+        const serviceData = response.data.service || response.data;
+        console.log('✅ [ServiceDetailScreen] Service data:', serviceData);
+        console.log('📋 [ServiceDetailScreen] Service fields:', {
+          name: serviceData.name,
+          description: serviceData.description,
+          category: serviceData.category,
+          subcategory: serviceData.subcategory,
+          basePrice: serviceData.basePrice,
+          priceUnit: serviceData.priceUnit,
+          duration: serviceData.duration,
+          isActive: serviceData.isActive,
+          features: serviceData.features,
+          faqs: serviceData.faqs,
+          tags: serviceData.tags,
+          averageRating: serviceData.averageRating,
+          totalRatings: serviceData.totalRatings,
+          bookingCount: serviceData.bookingCount,
+          imageUrl: serviceData.imageUrl,
+        });
+        setService(serviceData);
+      } else {
+        console.error('❌ [ServiceDetailScreen] Invalid response structure:', {
+          success: response.success,
+          hasData: !!response.data,
+          dataKeys: response.data ? Object.keys(response.data) : [],
+        });
       }
-    } catch (error) {
-      console.error('Error loading service detail:', error);
-      Alert.alert('Error', 'Unable to load service details. Please try again.');
+    } catch (error: any) {
+      console.error('❌ [ServiceDetailScreen] Error loading service:', error);
+      console.error('❌ [ServiceDetailScreen] Error details:', {
+        message: error.message,
+        response: error.response?.data,
+      });
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || error.message || 'Unable to load service details. Please try again.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setLoading(false);
     }
@@ -45,20 +81,31 @@ export const ServiceDetailScreen = () => {
 
   const handleToggleFavorite = async () => {
     try {
+      console.log(`🔖 [ServiceDetailScreen] Toggling favorite for service: ${serviceId}`);
       if (isFavorite) {
         await serviceApi.removeFromFavorites(serviceId);
         setIsFavorite(false);
+        console.log('✅ [ServiceDetailScreen] Removed from favorites');
+        Alert.alert('Success', 'Removed from favorites');
       } else {
         await serviceApi.addToFavorites(serviceId);
         setIsFavorite(true);
+        console.log('✅ [ServiceDetailScreen] Added to favorites');
+        Alert.alert('Success', 'Added to favorites');
       }
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
+    } catch (error: any) {
+      console.error('❌ [ServiceDetailScreen] Error toggling favorite:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || error.message || 'Unable to update favorites',
+        [{ text: 'OK' }]
+      );
     }
   };
 
   const handleBookService = () => {
     if (service) {
+      console.log('🎫 [ServiceDetailScreen] Navigating to CreateBooking:', service._id);
       navigation.navigate('CreateBooking', { serviceId: service._id });
     }
   };
@@ -134,11 +181,18 @@ export const ServiceDetailScreen = () => {
                       <Text variant="headlineSmall" style={styles.title}>
                         {service.name}
                       </Text>
-                      {service.category && (
-                        <View style={styles.categoryBadge}>
-                          <Text style={styles.categoryBadgeText}>{service.category}</Text>
-                        </View>
-                      )}
+                      <View style={styles.badgesRow}>
+                        {service.category && (
+                          <View style={styles.categoryBadge}>
+                            <Text style={styles.categoryBadgeText}>{service.category}</Text>
+                          </View>
+                        )}
+                        {service.subcategory && (
+                          <View style={styles.subcategoryBadge}>
+                            <Text style={styles.subcategoryBadgeText}>{service.subcategory}</Text>
+                          </View>
+                        )}
+                      </View>
                     </View>
                     {service.averageRating !== undefined && service.averageRating > 0 && (
                       <View style={styles.ratingContainer}>
@@ -154,6 +208,28 @@ export const ServiceDetailScreen = () => {
                       </View>
                     )}
                   </View>
+
+                  {/* Booking Stats */}
+                  {(service.bookingCount !== undefined || service.totalRatings !== undefined) && (
+                    <View style={styles.statsRow}>
+                      {service.bookingCount !== undefined && service.bookingCount > 0 && (
+                        <View style={styles.statItem}>
+                          <MaterialCommunityIcons name="account-check" size={16} color={colors.primary} />
+                          <Text variant="bodySmall" style={styles.statText}>
+                            {service.bookingCount} bookings
+                          </Text>
+                        </View>
+                      )}
+                      {service.totalRatings !== undefined && service.totalRatings > 0 && (
+                        <View style={styles.statItem}>
+                          <MaterialCommunityIcons name="comment-text" size={16} color={colors.primary} />
+                          <Text variant="bodySmall" style={styles.statText}>
+                            {service.totalRatings} reviews
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
                 </LinearGradient>
               </View>
 
@@ -179,7 +255,7 @@ export const ServiceDetailScreen = () => {
                       ₹{service.basePrice}
                     </Text>
                     <Text variant="bodyMedium" style={styles.priceUnit}>
-                      {service.pricingModel || 'per service'}
+                      {service.priceUnit || 'per service'}
                     </Text>
                   </View>
                 </LinearGradient>
@@ -242,8 +318,72 @@ export const ServiceDetailScreen = () => {
                 </View>
               )}
 
+              {/* FAQs Card */}
+              {service.faqs && service.faqs.length > 0 && (
+                <View style={styles.card}>
+                  <LinearGradient
+                    colors={[colors.white, colors.gray[50]]}
+                    style={styles.cardGradient}
+                  >
+                    <View style={styles.cardHeader}>
+                      <LinearGradient
+                        colors={[colors.primary, colors.primaryDark]}
+                        style={styles.cardIcon}
+                      >
+                        <MaterialCommunityIcons name="help-circle" size={20} color={colors.white} />
+                      </LinearGradient>
+                      <Text variant="titleMedium" style={styles.cardTitle}>
+                        Frequently Asked Questions
+                      </Text>
+                    </View>
+                    {service.faqs.map((faq: any, index: number) => (
+                      <View key={index} style={styles.faqItem}>
+                        <Text variant="titleSmall" style={styles.faqQuestion}>
+                          Q: {faq.question}
+                        </Text>
+                        <Text variant="bodyMedium" style={styles.faqAnswer}>
+                          A: {faq.answer}
+                        </Text>
+                      </View>
+                    ))}
+                  </LinearGradient>
+                </View>
+              )}
+
+              {/* Tags Card */}
+              {service.tags && service.tags.length > 0 && (
+                <View style={styles.card}>
+                  <LinearGradient
+                    colors={[colors.white, colors.gray[50]]}
+                    style={styles.cardGradient}
+                  >
+                    <View style={styles.cardHeader}>
+                      <LinearGradient
+                        colors={[colors.accent, colors.accentDark]}
+                        style={styles.cardIcon}
+                      >
+                        <MaterialCommunityIcons name="tag-multiple" size={20} color={colors.white} />
+                      </LinearGradient>
+                      <Text variant="titleMedium" style={styles.cardTitle}>
+                        Related Keywords
+                      </Text>
+                    </View>
+                    <View style={styles.tagsContainer}>
+                      {service.tags.map((tag, index) => (
+                        <View key={index} style={styles.tagChip}>
+                          <MaterialCommunityIcons name="tag" size={14} color={colors.gray[600]} />
+                          <Text variant="bodySmall" style={styles.tagText}>
+                            {tag}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  </LinearGradient>
+                </View>
+              )}
+
               {/* Duration Card */}
-              {service.estimatedDuration && (
+              {service.duration && (
                 <View style={styles.card}>
                   <LinearGradient
                     colors={[colors.white, colors.gray[50]]}
@@ -261,14 +401,14 @@ export const ServiceDetailScreen = () => {
                       </Text>
                     </View>
                     <Text variant="bodyLarge" style={styles.infoText}>
-                      Approximately {service.estimatedDuration} minutes
+                      Approximately {service.duration} minutes
                     </Text>
                   </LinearGradient>
                 </View>
               )}
 
               {/* Availability Card */}
-              {service.isAvailable !== undefined && (
+              {service.isActive !== undefined && (
                 <View style={styles.card}>
                   <LinearGradient
                     colors={[colors.white, colors.gray[50]]}
@@ -276,11 +416,11 @@ export const ServiceDetailScreen = () => {
                   >
                     <View style={styles.cardHeader}>
                       <LinearGradient
-                        colors={service.isAvailable ? [colors.success, colors.success + 'CC'] : [colors.error, colors.error + 'CC']}
+                        colors={service.isActive ? [colors.success, colors.success + 'CC'] : [colors.error, colors.error + 'CC']}
                         style={styles.cardIcon}
                       >
                         <MaterialCommunityIcons
-                          name={service.isAvailable ? 'check-circle' : 'close-circle'}
+                          name={service.isActive ? 'check-circle' : 'close-circle'}
                           size={20}
                           color={colors.white}
                         />
@@ -292,16 +432,16 @@ export const ServiceDetailScreen = () => {
                     <View
                       style={[
                         styles.availabilityBadge,
-                        { backgroundColor: service.isAvailable ? colors.success + '20' : colors.error + '20' },
+                        { backgroundColor: service.isActive ? colors.success + '20' : colors.error + '20' },
                       ]}
                     >
                       <Text
                         style={[
                           styles.availabilityText,
-                          { color: service.isAvailable ? colors.success : colors.error },
+                          { color: service.isActive ? colors.success : colors.error },
                         ]}
                       >
-                        {service.isAvailable ? 'Available Now' : 'Currently Unavailable'}
+                        {service.isActive ? 'Available Now' : 'Currently Unavailable'}
                       </Text>
                     </View>
                   </LinearGradient>
@@ -325,10 +465,10 @@ export const ServiceDetailScreen = () => {
             <TouchableOpacity
               style={styles.bookButton}
               onPress={handleBookService}
-              disabled={!service.isAvailable}
+              disabled={!service.isActive}
             >
               <LinearGradient
-                colors={service.isAvailable ? [colors.primary, colors.primaryDark] : [colors.gray[400], colors.gray[500]]}
+                colors={service.isActive ? [colors.primary, colors.primaryDark] : [colors.gray[400], colors.gray[500]]}
                 style={styles.bookButtonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -419,8 +559,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     letterSpacing: -0.3,
   },
+  badgesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
+  },
   categoryBadge: {
-    alignSelf: 'flex-start',
     backgroundColor: colors.primary + '15',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
@@ -431,6 +576,17 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
   },
+  subcategoryBadge: {
+    backgroundColor: colors.secondary + '15',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+  },
+  subcategoryBadgeText: {
+    fontSize: 12,
+    color: colors.secondary,
+    fontWeight: '600',
+  },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -439,6 +595,24 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.md,
     gap: 4,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray[200],
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  statText: {
+    color: colors.gray[700],
+    fontWeight: '600',
   },
   rating: {
     color: colors.gray[900],
@@ -511,6 +685,39 @@ const styles = StyleSheet.create({
   availabilityText: {
     fontWeight: '700',
     fontSize: 14,
+  },
+  faqItem: {
+    marginBottom: spacing.md,
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray[200],
+  },
+  faqQuestion: {
+    color: colors.gray[900],
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  faqAnswer: {
+    color: colors.gray[600],
+    lineHeight: 20,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  tagChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.gray[100],
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+    gap: 4,
+  },
+  tagText: {
+    color: colors.gray[700],
+    fontWeight: '600',
   },
   bottomBar: {
     position: 'absolute',

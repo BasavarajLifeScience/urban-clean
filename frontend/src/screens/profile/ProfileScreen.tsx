@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../../contexts/AuthContext';
-import { userApi } from '../../services/api';
+import { userApi } from '../../services/api/user.api';
 import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
 interface ListItemProps {

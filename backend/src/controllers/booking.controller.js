@@ -13,6 +13,10 @@ const createBooking = async (req, res, next) => {
     const residentId = req.user.userId;
     const { serviceId, scheduledDate, scheduledTime, address, specialInstructions } = req.body;
 
+    console.log('🎫 [Booking Controller] Creating booking for resident:', residentId);
+    console.log('📋 [Booking Controller] Service:', serviceId);
+    console.log('📅 [Booking Controller] Date/Time:', scheduledDate, scheduledTime);
+
     // Get service details
     const service = await Service.findById(serviceId);
 
@@ -37,6 +41,9 @@ const createBooking = async (req, res, next) => {
       totalAmount: service.basePrice,
       checkInOTP: generateOTP(6),
     });
+
+    console.log('✅ [Booking Controller] Booking created:', booking._id);
+    console.log('🏠 [Booking Controller] Stored residentId:', booking.residentId);
 
     // Increment booking count for service
     service.bookingCount += 1;
@@ -89,6 +96,9 @@ const getBookingById = async (req, res, next) => {
     const { bookingId } = req.params;
     const userId = req.user.userId;
 
+    console.log('📋 [Booking Controller] Getting booking:', bookingId);
+    console.log('👤 [Booking Controller] Requested by user:', userId);
+
     const booking = await Booking.findById(bookingId)
       .populate('serviceId')
       .populate('sevakId', 'fullName phoneNumber email')
@@ -98,10 +108,23 @@ const getBookingById = async (req, res, next) => {
       throw new NotFoundError('Booking not found');
     }
 
+    console.log('✅ [Booking Controller] Booking found');
+    console.log('🏠 [Booking Controller] Resident ID:', booking.residentId?._id?.toString() || booking.residentId);
+    console.log('👷 [Booking Controller] Sevak ID:', booking.sevakId?._id?.toString() || booking.sevakId);
+
     // Check if user has permission to view this booking
-    if (booking.residentId._id.toString() !== userId && booking.sevakId?._id.toString() !== userId) {
+    // Handle both populated and non-populated residentId/sevakId
+    const residentIdStr = booking.residentId?._id?.toString() || booking.residentId?.toString();
+    const sevakIdStr = booking.sevakId?._id?.toString() || booking.sevakId?.toString();
+
+    console.log('🔍 [Booking Controller] Comparing:', { userId, residentIdStr, sevakIdStr });
+
+    if (residentIdStr !== userId && sevakIdStr !== userId) {
+      console.error('❌ [Booking Controller] Permission denied');
       throw new ForbiddenError('You do not have permission to view this booking');
     }
+
+    console.log('✅ [Booking Controller] Permission granted');
 
     return sendSuccess(res, 200, 'Booking retrieved successfully', {
       booking,

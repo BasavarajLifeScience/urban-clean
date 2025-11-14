@@ -45,6 +45,13 @@ import {
 // Profile Screen
 import { ProfileScreen } from './src/screens/profile';
 
+// Vendor Screens
+import {
+  VendorDashboardScreen,
+  VendorServicesScreen,
+  VendorOrdersScreen,
+} from './src/screens/vendor';
+
 // Placeholder for other screens
 import { Text, View, ActivityIndicator } from 'react-native';
 
@@ -300,6 +307,97 @@ const SevakNavigator = () => {
   );
 };
 
+// Vendor Tab Navigator
+const VendorTabs = () => {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.gray[500],
+        tabBarStyle: {
+          backgroundColor: colors.white,
+          borderTopColor: colors.gray[200],
+          borderTopWidth: 1,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          height: 60,
+          paddingBottom: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+        headerStyle: {
+          backgroundColor: colors.backgroundMedium,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTintColor: colors.white,
+        headerTitleStyle: {
+          fontWeight: '700',
+          fontSize: 20,
+        },
+        headerShown: true,
+      }}
+    >
+      <Tab.Screen
+        name="Dashboard"
+        component={VendorDashboardScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="view-dashboard" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Services"
+        component={VendorServicesScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="room-service" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Orders"
+        component={VendorOrdersScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="clipboard-list" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account" size={size} color={color} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+};
+
+// Vendor Navigator
+const VendorNavigator = () => {
+  const VendorStack = createStackNavigator();
+
+  return (
+    <VendorStack.Navigator>
+      <VendorStack.Screen
+        name="VendorTabs"
+        component={VendorTabs}
+        options={{ headerShown: false }}
+      />
+    </VendorStack.Navigator>
+  );
+};
+
 // Root Navigator
 const RootNavigator = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -313,6 +411,8 @@ const RootNavigator = () => {
     );
   }
 
+  console.log('🔍 [RootNavigator] Determining route - isAuthenticated:', isAuthenticated, 'role:', user?.role);
+
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {!isAuthenticated ? (
@@ -321,8 +421,14 @@ const RootNavigator = () => {
         <Stack.Screen name="Resident" component={ResidentNavigator} />
       ) : user?.role === 'sevak' ? (
         <Stack.Screen name="Sevak" component={SevakNavigator} />
+      ) : user?.role === 'vendor' ? (
+        <Stack.Screen name="Vendor" component={VendorNavigator} />
       ) : (
-        <Stack.Screen name="Auth" component={AuthNavigator} />
+        // Unknown role - fallback to auth
+        <>
+          {console.error('❌ [RootNavigator] Unknown user role:', user?.role)}
+          <Stack.Screen name="Auth" component={AuthNavigator} />
+        </>
       )}
     </Stack.Navigator>
   );

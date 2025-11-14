@@ -7,7 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
-import { ratingApi } from '../../services/api';
+import { ratingApi } from '../../services/api/rating.api';
 import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
 type RatingScreenRouteProp = RouteProp<ResidentStackParamList, 'Rating'>;

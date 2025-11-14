@@ -7,7 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { SevakStackParamList } from '../../navigation/types';
-import { sevakApi } from '../../services/api';
+import { sevakApi } from '../../services/api/sevak.api';
 import { Job } from '../../types';
 import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 

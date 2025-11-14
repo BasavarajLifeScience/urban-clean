@@ -40,6 +40,22 @@ const createOTP = async (userId, type) => {
  */
 const verifyOTP = async (userId, otpCode, type) => {
   try {
+    console.log('🔍 [OTP Service] Verifying OTP with params:', {
+      userId,
+      otpCode,
+      type,
+    });
+
+    // Check all OTPs for this user to help debug
+    const allUserOTPs = await OTP.find({ userId });
+    console.log('📋 [OTP Service] All OTPs for user:', allUserOTPs.map(o => ({
+      otp: o.otp,
+      type: o.type,
+      isUsed: o.isUsed,
+      expiresAt: o.expiresAt,
+      isValid: o.isValid(),
+    })));
+
     const otp = await OTP.findOne({
       userId,
       otp: otpCode,
@@ -48,16 +64,27 @@ const verifyOTP = async (userId, otpCode, type) => {
     });
 
     if (!otp) {
+      console.error('❌ [OTP Service] No matching OTP found in database');
       return { valid: false, message: 'Invalid OTP' };
     }
 
+    console.log('✅ [OTP Service] OTP found:', {
+      otp: otp.otp,
+      type: otp.type,
+      isUsed: otp.isUsed,
+      expiresAt: otp.expiresAt,
+    });
+
     if (!otp.isValid()) {
+      console.error('❌ [OTP Service] OTP expired');
       return { valid: false, message: 'OTP expired' };
     }
 
     // Mark OTP as used
     otp.isUsed = true;
     await otp.save();
+
+    console.log('✅ [OTP Service] OTP verified and marked as used');
 
     return { valid: true, message: 'OTP verified successfully' };
   } catch (error) {

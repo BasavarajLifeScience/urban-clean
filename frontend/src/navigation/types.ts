@@ -5,7 +5,7 @@ export type AuthStackParamList = {
   Welcome: undefined;
   Login: undefined;
   Register: { role?: 'resident' | 'sevak' | 'vendor' } | undefined;
-  OTPVerification: { phoneNumber?: string; email?: string };
+  OTPVerification: { userId: string; phoneNumber?: string; email?: string };
   ForgotPassword: undefined;
   ResetPassword: { userId: string; otp?: string };
 };

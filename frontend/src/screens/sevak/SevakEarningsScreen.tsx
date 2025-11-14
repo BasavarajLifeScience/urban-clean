@@ -4,7 +4,7 @@ import { Text, ActivityIndicator, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { sevakApi } from '../../services/api';
+import { sevakApi } from '../../services/api/sevak.api';
 import { Earnings } from '../../types';
 import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 

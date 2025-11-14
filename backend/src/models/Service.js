@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const serviceSchema = new mongoose.Schema({
+  vendorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false, // Optional - services can exist without vendor
+  },
   name: {
     type: String,
     required: [true, 'Service name is required'],
@@ -72,6 +77,7 @@ const serviceSchema = new mongoose.Schema({
 
 // Indexes for better query performance
 serviceSchema.index({ category: 1, isActive: 1 });
+serviceSchema.index({ vendorId: 1 });
 serviceSchema.index({ name: 'text', description: 'text', tags: 'text' });
 serviceSchema.index({ averageRating: -1 });
 serviceSchema.index({ basePrice: 1 });
