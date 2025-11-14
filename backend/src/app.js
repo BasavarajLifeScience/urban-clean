@@ -57,6 +57,16 @@ app.use('/api', apiLimiter);
 // API routes
 app.use('/api/v1', routes);
 
+// Root-level health check (for container orchestrators)
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Service is healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
+
 // Welcome route
 app.get('/', (req, res) => {
   res.json({
