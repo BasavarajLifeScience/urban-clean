@@ -23,7 +23,7 @@ export const OTPVerificationScreen = () => {
   const [resendTimer, setResendTimer] = useState(60);
   const inputRefs = useRef<(RNTextInput | null)[]>([]);
 
-  const { phoneNumber, email } = route.params || {};
+  const { userId, phoneNumber, email } = route.params || {};
 
   useEffect(() => {
     // Focus first input on mount
@@ -77,10 +77,15 @@ export const OTPVerificationScreen = () => {
       return;
     }
 
+    if (!userId) {
+      Alert.alert('Error', 'User ID not found. Please try registering again.');
+      return;
+    }
+
     try {
       setLoading(true);
       await verifyOTP({
-        phoneNumber: phoneNumber || '',
+        userId: userId,
         otp: otpCode,
       });
       // Navigation will be handled automatically by AuthContext
