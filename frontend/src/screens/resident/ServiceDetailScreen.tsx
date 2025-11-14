@@ -158,11 +158,18 @@ export const ServiceDetailScreen = () => {
                       <Text variant="headlineSmall" style={styles.title}>
                         {service.name}
                       </Text>
-                      {service.category && (
-                        <View style={styles.categoryBadge}>
-                          <Text style={styles.categoryBadgeText}>{service.category}</Text>
-                        </View>
-                      )}
+                      <View style={styles.badgesRow}>
+                        {service.category && (
+                          <View style={styles.categoryBadge}>
+                            <Text style={styles.categoryBadgeText}>{service.category}</Text>
+                          </View>
+                        )}
+                        {service.subcategory && (
+                          <View style={styles.subcategoryBadge}>
+                            <Text style={styles.subcategoryBadgeText}>{service.subcategory}</Text>
+                          </View>
+                        )}
+                      </View>
                     </View>
                     {service.averageRating !== undefined && service.averageRating > 0 && (
                       <View style={styles.ratingContainer}>
@@ -178,6 +185,28 @@ export const ServiceDetailScreen = () => {
                       </View>
                     )}
                   </View>
+
+                  {/* Booking Stats */}
+                  {(service.bookingCount !== undefined || service.totalRatings !== undefined) && (
+                    <View style={styles.statsRow}>
+                      {service.bookingCount !== undefined && service.bookingCount > 0 && (
+                        <View style={styles.statItem}>
+                          <MaterialCommunityIcons name="account-check" size={16} color={colors.primary} />
+                          <Text variant="bodySmall" style={styles.statText}>
+                            {service.bookingCount} bookings
+                          </Text>
+                        </View>
+                      )}
+                      {service.totalRatings !== undefined && service.totalRatings > 0 && (
+                        <View style={styles.statItem}>
+                          <MaterialCommunityIcons name="comment-text" size={16} color={colors.primary} />
+                          <Text variant="bodySmall" style={styles.statText}>
+                            {service.totalRatings} reviews
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
                 </LinearGradient>
               </View>
 
@@ -294,6 +323,38 @@ export const ServiceDetailScreen = () => {
                         </Text>
                       </View>
                     ))}
+                  </LinearGradient>
+                </View>
+              )}
+
+              {/* Tags Card */}
+              {service.tags && service.tags.length > 0 && (
+                <View style={styles.card}>
+                  <LinearGradient
+                    colors={[colors.white, colors.gray[50]]}
+                    style={styles.cardGradient}
+                  >
+                    <View style={styles.cardHeader}>
+                      <LinearGradient
+                        colors={[colors.accent, colors.accentDark]}
+                        style={styles.cardIcon}
+                      >
+                        <MaterialCommunityIcons name="tag-multiple" size={20} color={colors.white} />
+                      </LinearGradient>
+                      <Text variant="titleMedium" style={styles.cardTitle}>
+                        Related Keywords
+                      </Text>
+                    </View>
+                    <View style={styles.tagsContainer}>
+                      {service.tags.map((tag, index) => (
+                        <View key={index} style={styles.tagChip}>
+                          <MaterialCommunityIcons name="tag" size={14} color={colors.gray[600]} />
+                          <Text variant="bodySmall" style={styles.tagText}>
+                            {tag}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
                   </LinearGradient>
                 </View>
               )}
@@ -475,8 +536,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     letterSpacing: -0.3,
   },
+  badgesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
+  },
   categoryBadge: {
-    alignSelf: 'flex-start',
     backgroundColor: colors.primary + '15',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
@@ -487,6 +553,17 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
   },
+  subcategoryBadge: {
+    backgroundColor: colors.secondary + '15',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+  },
+  subcategoryBadgeText: {
+    fontSize: 12,
+    color: colors.secondary,
+    fontWeight: '600',
+  },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -495,6 +572,24 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.md,
     gap: 4,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray[200],
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  statText: {
+    color: colors.gray[700],
+    fontWeight: '600',
   },
   rating: {
     color: colors.gray[900],
@@ -582,6 +677,24 @@ const styles = StyleSheet.create({
   faqAnswer: {
     color: colors.gray[600],
     lineHeight: 20,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  tagChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.gray[100],
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+    gap: 4,
+  },
+  tagText: {
+    color: colors.gray[700],
+    fontWeight: '600',
   },
   bottomBar: {
     position: 'absolute',
