@@ -14,14 +14,16 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+
     setError('');
     setIsLoading(true);
 
     try {
       await login(email, password, adminCode);
     } catch (err: any) {
+      console.error('Login error:', err);
       setError(err.message || 'Login failed. Please check your credentials.');
-    } finally {
       setIsLoading(false);
     }
   };
