@@ -427,6 +427,15 @@ const getAllBookings = async (req, res, next) => {
     // Transform the data to match frontend expectations
     const transformedBookings = bookings.map(booking => {
       const bookingObj = booking.toObject();
+
+      // Log data integrity issues
+      if (!bookingObj.residentId) {
+        logger.warn(`⚠️ Booking ${bookingObj._id} has null residentId - possible deleted user`);
+      }
+      if (!bookingObj.serviceId) {
+        logger.warn(`⚠️ Booking ${bookingObj._id} has null serviceId - possible deleted service`);
+      }
+
       return {
         ...bookingObj,
         resident: bookingObj.residentId,
