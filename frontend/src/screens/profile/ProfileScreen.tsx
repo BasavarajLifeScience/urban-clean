@@ -87,7 +87,6 @@ export const ProfileScreen = () => {
     const labels: Record<string, string> = {
       resident: 'Resident',
       sevak: 'Service Provider',
-      vendor: 'Vendor',
     };
     return labels[role] || role;
   };

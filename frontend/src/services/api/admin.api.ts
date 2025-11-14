@@ -17,7 +17,6 @@ export interface DashboardStats {
         verified: number;
         blacklisted: number;
       };
-      vendors: { total: number };
     };
     bookings: {
       total: number;
@@ -236,7 +235,7 @@ export const createOffer = async (data: any) => {
 export const sendBroadcast = async (data: {
   title: string;
   message: string;
-  targetAudience: 'all' | 'residents' | 'sevaks' | 'vendors' | 'custom';
+  targetAudience: 'all' | 'residents' | 'sevaks' | 'custom';
   userIds?: string[];
 }) => {
   const response = await api.post('/admin/notifications/broadcast', data);

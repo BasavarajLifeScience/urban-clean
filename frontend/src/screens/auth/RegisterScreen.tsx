@@ -33,7 +33,7 @@ export const RegisterScreen = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<'resident' | 'sevak' | 'vendor'>(
+  const [selectedRole, setSelectedRole] = useState<'resident' | 'sevak'>(
     route.params?.role || 'resident'
   );
   const [roleMenuVisible, setRoleMenuVisible] = useState(false);
@@ -122,7 +122,6 @@ export const RegisterScreen = () => {
     const labels = {
       resident: 'Resident',
       sevak: 'Service Provider (Sevak)',
-      vendor: 'Vendor',
     };
     return labels[selectedRole];
   };
@@ -268,7 +267,6 @@ export const RegisterScreen = () => {
               >
                 <Menu.Item onPress={() => { setSelectedRole('resident'); setRoleMenuVisible(false); }} title="Resident" />
                 <Menu.Item onPress={() => { setSelectedRole('sevak'); setRoleMenuVisible(false); }} title="Service Provider (Sevak)" />
-                <Menu.Item onPress={() => { setSelectedRole('vendor'); setRoleMenuVisible(false); }} title="Vendor" />
               </Menu>
 
               <Controller

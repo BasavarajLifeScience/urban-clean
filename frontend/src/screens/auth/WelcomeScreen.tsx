@@ -13,7 +13,7 @@ type WelcomeScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList,
 
 export const WelcomeScreen = () => {
   const navigation = useNavigation<WelcomeScreenNavigationProp>();
-  const [selectedRole, setSelectedRole] = useState<'resident' | 'sevak' | 'vendor'>('resident');
+  const [selectedRole, setSelectedRole] = useState<'resident' | 'sevak'>('resident');
 
   const handleGetStarted = () => {
     navigation.navigate('Register', { role: selectedRole });
@@ -29,8 +29,6 @@ export const WelcomeScreen = () => {
         return 'home-account';
       case 'sevak':
         return 'account-hard-hat';
-      case 'vendor':
-        return 'store';
       default:
         return 'account';
     }
@@ -69,13 +67,12 @@ export const WelcomeScreen = () => {
               </Text>
 
               <RadioButton.Group
-                onValueChange={(value) => setSelectedRole(value as 'resident' | 'sevak' | 'vendor')}
+                onValueChange={(value) => setSelectedRole(value as 'resident' | 'sevak')}
                 value={selectedRole}
               >
                 {[
                   { value: 'resident', title: 'Resident', description: 'Book services for your home' },
                   { value: 'sevak', title: 'Service Provider', description: 'Provide services to residents' },
-                  { value: 'vendor', title: 'Vendor', description: 'Manage your service business' },
                 ].map((role, index) => (
                   <View key={role.value} style={[styles.roleCard, selectedRole === role.value && styles.selectedCard]}>
                     <View style={styles.roleCardContent}>
