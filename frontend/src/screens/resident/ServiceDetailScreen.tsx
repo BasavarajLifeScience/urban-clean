@@ -7,7 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
-import { serviceApi } from '../../services/api';
+import { serviceApi } from '../../services/api/service.api';
 import { Service } from '../../types';
 import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 

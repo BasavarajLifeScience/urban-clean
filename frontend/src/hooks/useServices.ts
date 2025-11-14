@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { serviceApi } from '../services/api';
+import { serviceApi } from '../services/api/service.api';
 import { Service, Category } from '../types';
 
 export const useServices = () => {

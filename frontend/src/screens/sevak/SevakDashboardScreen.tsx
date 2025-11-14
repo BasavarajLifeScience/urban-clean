@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { SevakStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
-import { sevakApi } from '../../services/api';
+import { sevakApi } from '../../services/api/sevak.api';
 import { Job, PerformanceMetrics } from '../../types';
 import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 

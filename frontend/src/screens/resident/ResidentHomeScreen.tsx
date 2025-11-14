@@ -8,7 +8,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
-import { serviceApi, bookingApi } from '../../services/api';
+import { serviceApi } from '../../services/api/service.api';
+import { bookingApi } from '../../services/api/booking.api';
 import { Service, Booking } from '../../types';
 import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 

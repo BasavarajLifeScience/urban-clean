@@ -8,7 +8,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ResidentStackParamList } from '../../navigation/types';
-import { serviceApi, bookingApi } from '../../services/api';
+import { serviceApi } from '../../services/api/service.api';
+import { bookingApi } from '../../services/api/booking.api';
 import { Service } from '../../types';
 import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 
